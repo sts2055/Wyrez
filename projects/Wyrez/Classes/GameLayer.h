@@ -49,6 +49,8 @@ return sprite; \
 }
 
 #define kSquareSide 50
+#define kSquareYCount 1000
+#define kSquareXCount 1000
 
 static const ccColor3B kCOLOR_GRAY_03 = {153, 153, 153};
 static const ccColor3B kCOLOR_GRAY_05 = {102, 102, 102};
@@ -85,6 +87,8 @@ private:
 private: // members
     CCPoint m_visibleOrigin;
     CCSize m_visibleSize;
+    int m_squareSide;
+    
     CCDrawNode* m_pDraw;
     std::vector<CCPoint*> * m_pGridOrigins_horizontal;
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
@@ -105,4 +109,4 @@ public: // functions
     virtual void scrollViewDidZoom(CCScrollView* view);
 };
 
-#endif /* defined(__HelloCpp__GameLayer__) */
+#endif /* defined(__Wyrez__GameLayer__) */

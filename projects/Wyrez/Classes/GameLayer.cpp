@@ -73,6 +73,7 @@ bool GameLayer::init()
     
     m_visibleOrigin = CCDirector::sharedDirector()->getVisibleOrigin();
     m_visibleSize = CCDirector::sharedDirector()->getVisibleSize();
+    m_squareSide = kSquareSide;
     
     m_pDraw = CCDrawNode::create();
     addChild(m_pDraw, 10);
@@ -83,26 +84,28 @@ bool GameLayer::init()
     
     
     CCLayer* layer = CCLayer::create();
-    layer->setContentSize(CCSizeMake(kSquareSide * 1000, kSquareSide * 1000));
+    layer->setContentSize(CCSizeMake(m_squareSide * kSquareXCount, m_squareSide * kSquareYCount));
     auto scrollView = CCScrollView::create(m_visibleSize, layer);
     scrollView->setBounceable(false);
+    scrollView->setFMinScale(0.1f);
+    scrollView->setFMaxScale(1.0f);
     scrollView->setDelegate(this);
     
     
-    int horizontalLines = layer->getContentSize().height/kSquareSide;
-    int verticalLines = layer->getContentSize().width/kSquareSide;
+    int horizontalLines = layer->getContentSize().height/m_squareSide;
+    int verticalLines = layer->getContentSize().width/m_squareSide;
     
     CCLOG("horizontalLines %i", horizontalLines);
     CCLOG("verticalLines %i", verticalLines);
     
     for (int i = 0; i < horizontalLines; i++)
     {
-        m_pGridOrigins_horizontal->push_back(new CCPoint(0, i * kSquareSide));
+        m_pGridOrigins_horizontal->push_back(new CCPoint(0, i * m_squareSide));
     }
     
     for (int i = 0; i < verticalLines; i++)
     {
-        m_pGridOrigins_vertical->push_back(new CCPoint(i * kSquareSide, 0));
+        m_pGridOrigins_vertical->push_back(new CCPoint(i * m_squareSide, 0));
     }
     
     
@@ -113,6 +116,9 @@ bool GameLayer::init()
     
     this->addChild(scrollView);
     this->addChild(Hud::createWithParent(*this));
+    
+    // Setup the grid
+    this->scrollViewDidScroll(scrollView);
     
     return true;
 }
@@ -129,36 +135,63 @@ CCScene* GameLayer::scene()
 
 void GameLayer::scrollViewDidScroll(CCScrollView* view)
 {
-    CCPoint offset = view->getContentOffset();
-    CCPoint temp = ccp(offset.x/kSquareSide, offset.y/kSquareSide);
-    CCLOG("temp x:%f  y:%f", temp.x, temp.y );
-    
-    // initially the view's offset is negative, so we make it positive to be able to create a rect
-    // that detect which points are on screen
-    CCRect rect = CCRectMake(-offset.x, -offset.y, m_visibleSize.width, m_visibleSize.height);
     m_pDraw->clear();
     
-    for (auto pPoint : *m_pGridOrigins_horizontal)
-    {
-        if (pPoint->y >= rect.origin.y
-            && pPoint->y <= rect.origin.y + m_visibleSize.height) {
-            CCPoint fromPoint = CCPointMake(0, pPoint->y + offset.y);
-            CCPoint toPoint = CCPointMake(m_visibleSize.width, fromPoint.y);
-            m_pDraw->drawSegment(fromPoint, toPoint, 0.5f, ccc4f(0, 1, 0, 1));
-        }
+    // m_squareSide being smaller than half of kSquareSide means that the map scale is smaller than 0.5
+    // at which point we don't want to display a grid at all
+    if (m_squareSide < kSquareSide/2) {
+        return;
     }
     
-    for (auto pPoint : *m_pGridOrigins_vertical)
+    // the view's offset is negative
+    CCPoint offset = view->getContentOffset();
+    
+    // - calculate the horizontal and vertical start indexes for the vector to only iterate over the points that are on screen
+    // - MIN because h or vIndex can be above the max index of the vector when zooming in/out at the very left/top edge
+    // - Right now it shows either no h or v grid when at the very edge and zooming in/out as it displays areas that are out of bounds
+    // - This could be prevented by for example adding more gridOrigins to the vectors
+    int hIndex = MIN(floor(-offset.y/m_squareSide), kSquareYCount);
+    int vIndex = MIN(floor(-offset.x/m_squareSide), kSquareXCount);
+    
+    // - MIN because h or vIndex_max can be above the max index of the vector when scrolling to the very left/top edge
+    int hIndex_max = MIN(hIndex + m_visibleSize.height/m_squareSide + 2, kSquareYCount);
+    int vIndex_max = MIN(vIndex + m_visibleSize.width/m_squareSide + 2, kSquareXCount) ;
+    
+    for (auto cIter = m_pGridOrigins_horizontal->cbegin() + hIndex;
+         cIter != m_pGridOrigins_horizontal->cbegin() + hIndex_max; ++cIter)
     {
-        if (pPoint->x >= rect.origin.x
-            && pPoint->x <= rect.origin.x + m_visibleSize.width) {
-            CCPoint fromPoint = CCPointMake(pPoint->x + offset.x, 0);
-            CCPoint toPoint = CCPointMake(fromPoint.x, m_visibleSize.height);
-            m_pDraw->drawSegment(fromPoint, toPoint, 0.5f, ccc4f(0, 1, 0, 1));
-        }
+        CCPoint fromPoint = CCPointMake(0, (*cIter)->y + offset.y);
+        CCPoint toPoint = CCPointMake(m_visibleSize.width, fromPoint.y);
+        m_pDraw->drawSegment(fromPoint, toPoint, 0.5f, ccc4FFromccc3B(kCOLOR_GRAY_06));
+    }
+    
+    for (auto cIter = m_pGridOrigins_vertical->cbegin() + vIndex;
+         cIter != m_pGridOrigins_vertical->cbegin() + vIndex_max; ++cIter)
+    {
+        CCPoint fromPoint = CCPointMake((*cIter)->x + offset.x, 0);
+        CCPoint toPoint = CCPointMake(fromPoint.x, m_visibleSize.height);
+        m_pDraw->drawSegment(fromPoint, toPoint, 0.5f, ccc4FFromccc3B(kCOLOR_GRAY_06));
     }
 }
 
 void GameLayer::scrollViewDidZoom(CCScrollView* view)
 {
+    CCNode* container = view->getContainer();
+    m_squareSide = floor(kSquareSide * container->getScale());
+    
+    int i = 0;
+    for (auto cIter = m_pGridOrigins_horizontal->begin();
+         cIter != m_pGridOrigins_horizontal->end(); ++cIter)
+    {
+        (*cIter)->y = i * m_squareSide;
+        i++;
+    }
+    
+    i = 0;
+    for (auto cIter = m_pGridOrigins_vertical->begin();
+         cIter != m_pGridOrigins_vertical->end(); ++cIter)
+    {
+        (*cIter)->x = i * m_squareSide;
+        i++;
+    }
 }
