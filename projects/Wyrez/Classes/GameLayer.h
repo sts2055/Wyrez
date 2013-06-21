@@ -11,6 +11,7 @@
 
 #include "cocos2d.h"
 #include "cocos-ext.h"
+#include "Square.h"
 
 USING_NS_CC;
 USING_NS_CC_EXT;
@@ -48,9 +49,11 @@ sprite->autorelease(); \
 return sprite; \
 }
 
+#define kDefaultScale 1
 #define kSquareSide 50
-#define kSquareYCount 1000
 #define kSquareXCount 1000
+#define kSquareYCount 1000
+
 
 static const ccColor3B kCOLOR_GRAY_03 = {153, 153, 153};
 static const ccColor3B kCOLOR_GRAY_05 = {102, 102, 102};
@@ -88,10 +91,13 @@ private: // members
     CCPoint m_visibleOrigin;
     CCSize m_visibleSize;
     int m_squareSide;
+    float m_scale;
     
     CCDrawNode* m_pDraw;
-    std::vector<CCPoint*> * m_pGridOrigins_horizontal;
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
+    std::vector<CCPoint*> * m_pGridOrigins_horizontal;
+    std::vector<Square*> * m_pSquares;
+    
     
 public: // members
     
