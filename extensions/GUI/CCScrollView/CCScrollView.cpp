@@ -47,6 +47,7 @@ CCScrollView::CCScrollView()
 , m_pDelegate(NULL)
 , m_eDirection(kCCScrollViewDirectionBoth)
 , m_bDragging(false)
+, m_bZooming(false)
 , m_pContainer(NULL)
 , m_bTouchMoved(false)
 , m_bBounceable(false)
@@ -182,6 +183,7 @@ void CCScrollView::setTouchEnabled(bool e)
     if (!e)
     {
         m_bDragging = false;
+        m_bZooming = false;
         m_bTouchMoved = false;
         m_pTouches->removeAllObjects();
     }
@@ -713,6 +715,7 @@ void CCScrollView::ccTouchMoved(CCTouch* touch, CCEvent* event)
             const float len = ccpDistance(m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(0)),
                                             m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(1)));
             this->setZoomScale(this->getZoomScale()*len/m_fTouchLength);
+            m_bZooming = true;
         }
     }
 }
@@ -736,6 +739,7 @@ void CCScrollView::ccTouchEnded(CCTouch* touch, CCEvent* event)
     {
         m_bDragging = false;    
         m_bTouchMoved = false;
+        m_bZooming = false;
     }
 }
 
@@ -750,6 +754,7 @@ void CCScrollView::ccTouchCancelled(CCTouch* touch, CCEvent* event)
     {
         m_bDragging = false;    
         m_bTouchMoved = false;
+        m_bZooming = false;
     }
 }
 

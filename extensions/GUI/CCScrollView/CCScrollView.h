@@ -155,6 +155,7 @@ public:
 
 
     bool isDragging() {return m_bDragging;}
+    bool isZooming() {return m_bZooming;}
     bool isTouchMoved() { return m_bTouchMoved; }
     bool isBounceable() { return m_bBounceable; }
     void setBounceable(bool bBounceable) { m_bBounceable = bBounceable; }
@@ -265,6 +266,11 @@ protected:
      * If YES, the view is being dragged.
      */
     bool m_bDragging;
+    
+    /**
+     * If YES, the view is being zoomed.
+     */
+    bool m_bZooming;
 
     /**
      * Content offset. Note that left-bottom point is the origin

@@ -54,13 +54,11 @@ return sprite; \
 #define kSquareXCount 1000
 #define kSquareYCount 1000
 
-
-static const ccColor3B kCOLOR_GRAY_03 = {153, 153, 153};
-static const ccColor3B kCOLOR_GRAY_05 = {102, 102, 102};
-static const ccColor3B kCOLOR_GRAY_06 = {77, 77, 77};
-static const ccColor3B kCOLOR_GRAY_07 = {51, 51, 51};
-static const ccColor3B kCOLOR_PINK_02 = {255, 128, 229};
-
+static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
+static const ccColor4F kCOLOR_GRAY_06 = {0.301, 0.301, 0.301, 1.0}; // grid default
+static const ccColor4F kCOLOR_ORANGE = {1.0, 0.576, 0.141, 1.0}; // filled default
+static const ccColor4F kCOLOR_BLUE = {0.050, 0.6, 0.988, 1.0}; // charged default
+static const ccColor4F kCOLOR_WHITE = {1.0, 1.0, 1.0, 1.0}; // discharging default
 
 class GameLayer : public CCLayer, public CCScrollViewDelegate
 {
@@ -82,8 +80,6 @@ private:
     public: // functions
         virtual ~Hud();
         CREATE_FUNC_WITH_PARENT(Hud, GameLayer);
-        
-        
     };
     
 // Class: GameLayer
@@ -92,7 +88,12 @@ private: // members
     CCSize m_visibleSize;
     int m_squareSide;
     float m_scale;
+    int m_squaresCount;
+    ccColor4F m_squareFillColor;
+    ccColor4F m_squareChargedColor;
+    ccColor4F m_squareDischargingColor;
     
+    CCScrollView* m_pScrollView;
     CCDrawNode* m_pDraw;
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
     std::vector<CCPoint*> * m_pGridOrigins_horizontal;
@@ -105,14 +106,22 @@ private: // functions
     GameLayer();
     virtual bool init();
     virtual ~GameLayer();
+    void gameLogic();
+    void redraw(CCScrollView* view);
+    void rearrange(CCScrollView* view);
     
 public: // functions
     CREATE_QUICK_SPRITE_FUNCTION;
     CREATE_FUNC(GameLayer);
     static CCScene* scene();
     
-    virtual void scrollViewDidScroll(CCScrollView* view);
-    virtual void scrollViewDidZoom(CCScrollView* view);
+    virtual void scrollViewDidScroll(CCScrollView* pView);
+    virtual void scrollViewDidZoom(CCScrollView* pView);
+    
+    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
 };
 
 #endif /* defined(__Wyrez__GameLayer__) */
