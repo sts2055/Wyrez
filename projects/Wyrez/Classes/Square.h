@@ -26,16 +26,22 @@ typedef enum {
 
 class Square : public CCRect
 {
-    
 public:
+    int m_index;
     SquareFillStateTypes m_fillState;
     SquareChargeStateTypes m_chargeState;
     std::vector<Square*> * m_surroundingSquares;
     
 public:
     Square();
-    Square(float x, float y, float width, float height);
+    Square(int index, float x, float y, float width, float height);
     virtual ~Square();
+    
+    // Overloaded < for comparisons based on the square's index (e.g. used when sorting).
+    // The index corresponds to its location on the map since when generating the map grid,
+    // squares are positioned and push_back'ed consecutively starting from 0,0 (bottom left)
+    // whilst first filling the column (going up) before moving on to the next column to the right.
+    bool operator<( const Square& val ) const { return m_index < val.m_index; }
 };
 
 #endif /* defined(__Wyrez__Square__) */

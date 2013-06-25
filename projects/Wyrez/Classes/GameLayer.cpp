@@ -224,7 +224,7 @@ void GameDrawNode::redraw(CCScrollView* pView)
                 break;
             }
             
-            Square *square = m_rWyrezMap.m_pSquares->at(j);
+            Square *square = m_rWyrezMap.m_pSquares_all->at(j);
             
             if (square->m_fillState == kSquareFillStateEmpty) {
                 continue;
@@ -304,7 +304,7 @@ void GameDrawNode::rearrange(CCScrollView* pView)
     {
         for (int j = 0; j < m_rWyrezMap.m_pGridOrigins_horizontal->size(); j++)
         {
-            Square *square = m_rWyrezMap.m_pSquares->at(k);
+            Square *square = m_rWyrezMap.m_pSquares_all->at(k);
             square->origin.x = i * m_squareSide;
             square->origin.y = j * m_squareSide;
             square->size.width = m_squareSide;
@@ -374,7 +374,7 @@ bool GameScene::init()
     this->addChild(m_pGameHud);
     
     
-    this->schedule(schedule_selector(GameScene::gameLogic), 0.1);
+    this->schedule(schedule_selector(GameScene::gameLogic), 0.05);
 
     return true;
 }
@@ -390,7 +390,81 @@ void GameScene::gameLogic()
         || m_pScrollView->isZooming()) {
         return;
     }
+    this->handleCharges();
     m_pDraw->redraw(m_pScrollView);
+}
+
+void GameScene::handleCharges()
+{
+    std::vector<Square*> squaresToCharge = std::vector<Square*>();
+    std::vector<Square*> squaresToDischarge = std::vector<Square*>();
+    std::vector<Square*> squaresToNoCharge = std::vector<Square*>();
+    for (auto pSquareIter : *m_pWyrezMap->m_pSquares_filled)
+    {
+        switch (pSquareIter.second->m_chargeState) {
+            case kSquareChargeStateNoCharge:
+            {
+                int electronHeads = 0;
+                
+                for (auto neighborIter : *pSquareIter.second->m_surroundingSquares)
+                {
+                    if (neighborIter->m_fillState == kSquareFillStateFilled
+                        && neighborIter->m_chargeState == kSquareChargeStateCharged) {
+                        electronHeads++;
+                    }
+                }
+                if (electronHeads == 1 || electronHeads == 2) {
+                    squaresToCharge.push_back(pSquareIter.second);
+                }
+                
+                break;
+            }
+  
+            case kSquareChargeStateDischarging:
+                squaresToNoCharge.push_back(pSquareIter.second);
+                break;
+            case kSquareChargeStateCharged:
+                squaresToDischarge.push_back(pSquareIter.second);
+                /*bool shouldDischarge = true;
+                for (auto neighborIter : *pSquareIter.second->m_surroundingSquares)
+                {
+                    if (neighborIter->m_fillState == kSquareFillStateFilled) {
+                        if (neighborIter->m_chargeState == kSquareChargeStateNoCharge) {
+                            //neighborIter->m_chargeState = kSquareChargeStateCharged;
+                            squaresToCharge.push_back(neighborIter);
+                        }
+                        else {
+                            squaresToNoCharge.push_back(neighborIter);
+                            squaresToNoCharge.push_back(pSquareIter.second);
+                            shouldDischarge = false;
+                            //neighborIter->m_chargeState = kSquareChargeStateNoCharge;
+                            //pSquareIter.second->m_chargeState = kSquareChargeStateNoCharge;
+                        }
+                        
+                    }
+                }
+                
+                if (shouldDischarge) {
+                    squaresToDischarge.push_back(pSquareIter.second);
+                }*/
+                break;
+        }
+    }
+    
+    for (auto pIter : squaresToCharge)
+    {
+        pIter->m_chargeState = kSquareChargeStateCharged;
+    }
+    
+    for (auto pIter : squaresToDischarge)
+    {
+        pIter->m_chargeState = kSquareChargeStateDischarging;
+    }
+    
+    for (auto pIter : squaresToNoCharge)
+    {
+        pIter->m_chargeState = kSquareChargeStateNoCharge;
+    }
 }
 
 void GameScene::scrollViewDidScroll(CCScrollView* view)
@@ -400,7 +474,6 @@ void GameScene::scrollViewDidScroll(CCScrollView* view)
 
 void GameScene::scrollViewDidZoom(CCScrollView* view)
 {
-    
     m_pDraw->rearrange(view);
     m_pGameLayer->setWasZooming(true);
 }

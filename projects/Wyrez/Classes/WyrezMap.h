@@ -32,7 +32,8 @@ private:
 public:
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
     std::vector<CCPoint*> * m_pGridOrigins_horizontal;
-    std::vector<Square*> * m_pSquares;
+    std::vector<Square*> * m_pSquares_all;
+    std::map<int, Square*> * m_pSquares_filled; // square's index as key
     
 public:
     WyrezMap();
@@ -48,6 +49,16 @@ public:
     //std::vector<CCPoint*>* getGridOriginsVertical() {return m_pGridOrigins_vertical;}
     //std::vector<CCPoint*>* getGridOriginsHorizontal() {return m_pGridOrigins_horizontal;}
     //std::vector<Square*>* getSquares() {return m_pSquares;}
+    
+    typedef unsigned long long timestamp_t;
+    
+    static timestamp_t
+    get_timestamp ()
+    {
+        struct timeval now;
+        gettimeofday (&now, NULL);
+        return  now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
+    }
     
 };
 

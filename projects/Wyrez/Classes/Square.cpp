@@ -9,15 +9,17 @@
 #include "Square.h"
 
 Square::Square()
-: m_surroundingSquares(new std::vector<Square*>)
+: m_index(0)
+, m_surroundingSquares(new std::vector<Square*>)
 , m_fillState(kSquareFillStateEmpty)
 , m_chargeState(kSquareChargeStateNoCharge)
 {
     setRect(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-Square::Square(float x, float y, float width, float height)
-: m_surroundingSquares(new std::vector<Square*>)
+Square::Square(int index, float x, float y, float width, float height)
+: m_index(index)
+, m_surroundingSquares(new std::vector<Square*>)
 , m_fillState(kSquareFillStateEmpty)
 , m_chargeState(kSquareChargeStateNoCharge)
 {

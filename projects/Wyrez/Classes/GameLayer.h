@@ -149,6 +149,7 @@ private:
     virtual ~GameScene();
     virtual bool init();
     void gameLogic();
+    void handleCharges();
     
 public: // functions
     CREATE_QUICK_SPRITE_FUNCTION;
