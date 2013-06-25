@@ -10,21 +10,21 @@
 
 
 /*****************************************************************************************
- * implementation of inner class Hud
+ * implementation of GameHud
  *****************************************************************************************/
-GameLayer::Hud::Hud(const GameLayer& parent)
-: m_rParent(parent)
+GameHud::GameHud(const GameScene& rParentScene)
+: m_rParentScene(rParentScene)
 {
 }
 
-GameLayer::Hud::~Hud() // Destructor
+GameHud::~GameHud() // Destructor
 {
-    CCLOG("cocos2d: deallocing Hud %p", this);
+    CCLOG("cocos2d: deallocing GameHud %p", this);
     
     
 }
 
-bool GameLayer::Hud::init()
+bool GameHud::init()
 {
     if ( !CCLayer::init() )
     {
@@ -34,26 +34,29 @@ bool GameLayer::Hud::init()
     return true;
 }
 
-
+GameHud* GameHud::createWithParentScene(const GameScene& rParentScene)
+{
+    GameHud* pRet = new GameHud(rParentScene);
+    if (pRet && pRet->init())
+    {
+        pRet->autorelease();
+        return pRet;
+    }
+    else
+    {
+        delete pRet;
+        pRet = NULL;
+        return NULL;
+    }
+}
 
 
 
 /*****************************************************************************************
- * implementation of GameScene
+ * implementation of GameLayer
  *****************************************************************************************/
-GameLayer::GameLayer()
-: m_visibleOrigin(CCPointZero)
-, m_visibleSize(CCSizeZero)
-, m_squareSide(0)
-, m_scale(0)
-, m_squaresCount(0)
-, m_squareFillColor(kCOLOR_BLACK)
-, m_squareChargedColor(kCOLOR_BLACK)
-, m_squareDischargingColor(kCOLOR_BLACK)
-, m_pScrollView(nullptr)
-, m_pDraw(nullptr)
-, m_pGridOrigins_vertical(nullptr)
-, m_pGridOrigins_horizontal(nullptr)
+GameLayer::GameLayer(const GameScene& rParent)
+: m_rParentScene(rParent)
 {
 }
 
@@ -61,13 +64,90 @@ GameLayer::~GameLayer()
 {
     CCLOG("cocos2d: deallocing GameLayer %p", this);
     
+    
+}
+
+bool GameLayer::init()
+{
+    if ( !CCLayer::init() )
+    {
+        return false;
+    }
+    
+    this->setTouchEnabled(true);
+    
+    
+    return true;
+}
+
+bool GameLayer::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
+{
+    std::cout << "ccTouchBegan:\n";
+    return true;
+}
+
+void GameLayer::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
+{
+    std::cout << "ccTouchMoved:\n";
+}
+
+void GameLayer::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
+{
+    std::cout << "ccTouchEnded:\n";
+}
+
+void GameLayer::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
+{
+    std::cout << "ccTouchCancelled:\n";
+}
+
+GameLayer* GameLayer::createWithParentScene(const GameScene& rParentScene)
+{
+    GameLayer* pRet = new GameLayer(rParentScene);
+    if (pRet && pRet->init())
+    {
+        pRet->autorelease();
+        return pRet;
+    }
+    else
+    {
+        delete pRet;
+        pRet = NULL;
+        return NULL;
+    }
+}
+
+
+
+
+/*****************************************************************************************
+ * implementation of GameDrawNode
+ *****************************************************************************************/
+GameDrawNode::GameDrawNode(const GameScene& rParentScene)
+: m_rParentScene(rParentScene)
+, m_squareSide(0)
+, m_scale(0)
+, m_squaresCount(0)
+, m_squareFillColor(kCOLOR_BLACK)
+, m_squareChargedColor(kCOLOR_BLACK)
+, m_squareDischargingColor(kCOLOR_BLACK)
+, m_pGridOrigins_vertical(nullptr)
+, m_pGridOrigins_horizontal(nullptr)
+{
+    
+}
+
+GameDrawNode::~GameDrawNode()
+{
+    CCLOG("cocos2d: deallocing GameDrawNode %p", this);
+    
     for (auto pPoint : *m_pGridOrigins_vertical)
     {
         delete pPoint;
     }
-    delete m_pGridOrigins_horizontal;
+    delete m_pGridOrigins_vertical;
     
-    for (auto pPoint : *m_pGridOrigins_vertical)
+    for (auto pPoint : *m_pGridOrigins_horizontal)
     {
         delete pPoint;
     }
@@ -80,111 +160,72 @@ GameLayer::~GameLayer()
     delete m_pSquares;
 }
 
-bool GameLayer::init()
+bool GameDrawNode::initWithMap(WyrezMap* pWyrezMap)
 {
-    if ( !CCLayer::init() )
+    if ( !CCDrawNode::init() )
     {
         return false;
     }
     
-    this->setTouchEnabled(true);
+    if (pWyrezMap == nullptr) {
+        CCLOG("pWyrezMap is null");
+        return false;
+    }
     
-    m_visibleOrigin = CCDirector::sharedDirector()->getVisibleOrigin();
-    m_visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     m_squareSide = kSquareSide;
     m_scale = kDefaultScale;
-    m_squaresCount = kSquareSide * kSquareSide;
+    m_squaresCount = pWyrezMap->getSquaresCountVertical() * pWyrezMap->getSquaresCountHorizontal();
     
-    m_pDraw = CCDrawNode::create();
-    addChild(m_pDraw, 10);
+    m_pGridOrigins_vertical = new std::vector<CCPoint*>();
+    for (auto iter : *pWyrezMap->getGridOriginsVertical())
+    {
+        m_pGridOrigins_vertical->push_back(new CCPoint(*iter));
+    }
     
     m_pGridOrigins_horizontal = new std::vector<CCPoint*>();
-    m_pGridOrigins_vertical = new std::vector<CCPoint*>();
+    for (auto iter : *pWyrezMap->getGridOriginsHorizontal())
+    {
+        m_pGridOrigins_horizontal->push_back(new CCPoint(*iter));
+    }
+    
     m_pSquares = new std::vector<Square*>();
+    for (auto iter : *pWyrezMap->getSquares())
+    {
+        m_pSquares->push_back(new Square(*iter));
+    }
+    
     m_squareFillColor = kCOLOR_ORANGE;
     m_squareChargedColor = kCOLOR_BLUE;
     m_squareDischargingColor = kCOLOR_WHITE;
     
-    
-    CCLayer* layer = CCLayer::create();
-    layer->setContentSize(CCSizeMake(m_squareSide * kSquareXCount, m_squareSide * kSquareYCount));
-    auto scrollView = CCScrollView::create(m_visibleSize, layer);
-    scrollView->setBounceable(false);
-    scrollView->setFMinScale(0.25f);
-    scrollView->setFMaxScale(1.0f);
-    scrollView->setDelegate(this);
-    m_pScrollView = scrollView;
-    
-    int verticalLines = layer->getContentSize().width/m_squareSide;
-    int horizontalLines = layer->getContentSize().height/m_squareSide;
-    
-    CCLOG("verticalLines %i", verticalLines);
-    CCLOG("horizontalLines %i", horizontalLines);
-    
-    
-    for (int i = 0; i < verticalLines; i++)
-    {
-        m_pGridOrigins_vertical->push_back(new CCPoint(i * m_squareSide, 0));
-    }
-    
-    for (int i = 0; i < horizontalLines; i++)
-    {
-        m_pGridOrigins_horizontal->push_back(new CCPoint(0, i * m_squareSide));
-    }
-    
-    
-    for (int i = 0; i < verticalLines; i++)
-    {
-        for (int j = 0; j < horizontalLines; j++)
-        {
-            m_pSquares->push_back(new Square(i * m_squareSide, j * m_squareSide, m_squareSide, m_squareSide));
-        }
-    }
-    
-    /*for (auto cIter = m_pSquares->begin();
-         cIter != m_pSquares->end(); ++cIter)
-    {
-        //std::cout << "square x:" << (*cIter)->origin.x << " y:" << (*cIter)->origin.y << " width:" << (*cIter)->size.width << " height:" << (*cIter)->size.height << "\n";
-    }*/
-    
-    
-    CCSprite *background = createQuickSprite(CCSizeMake(m_visibleSize.width, m_visibleSize.height), ccc3(51, 51, 51));
-    background->setAnchorPoint(CCPointZero);
-    background->setPosition(CCPointZero);
-    this->addChild(background);
-    
-    this->addChild(scrollView);
-    this->addChild(Hud::createWithParent(*this));
-    
-    // Setup the grid
-    this->schedule(schedule_selector(GameLayer::gameLogic), 0.1);
-    this->scrollViewDidScroll(scrollView);
+    CCLOG("m_pGridOrigins_vertical->size %li", m_pGridOrigins_vertical->size());
+    CCLOG("m_pGridOrigins_horizontal->size %li", m_pGridOrigins_horizontal->size());
+    CCLOG("m_pSquares->size %li", m_pSquares->size());
+
+    delete pWyrezMap;
     
     return true;
 }
 
-CCScene* GameLayer::scene()
+GameDrawNode* GameDrawNode::createWithSceneAndMap(const GameScene& rParentScene, WyrezMap* pWyrezMap)
 {
-    CCScene* scene = CCScene::create();
-    
-    GameLayer* gameLayer = GameLayer::create();
-    scene->addChild(gameLayer);
-    
-    return scene;
-}
-
-void GameLayer::gameLogic()
-{
-    if (m_pScrollView->isDragging()
-        || m_pScrollView->isZooming()) {
-        return;
+    GameDrawNode* pRet = new GameDrawNode(rParentScene);
+    if (pRet && pRet->initWithMap(pWyrezMap))
+    {
+        pRet->autorelease();
+        return pRet;
     }
-    this->redraw(m_pScrollView);
+    else
+    {
+        delete pRet;
+        pRet = NULL;
+        return NULL;
+    }
 }
 
-void GameLayer::redraw(CCScrollView* pView)
+void GameDrawNode::redraw(CCScrollView* pView)
 {
-    m_pDraw->clear();
+    this->clear();
     
     // the view's offset is negative
     CCPoint offset = pView->getContentOffset();
@@ -196,8 +237,8 @@ void GameLayer::redraw(CCScrollView* pView)
     int vIndex = MIN(floor(-offset.x/m_squareSide), kSquareXCount);
     int hIndex = MIN(floor(-offset.y/m_squareSide), kSquareYCount);
     
-    int vLinesPerScreen = m_visibleSize.width/m_squareSide + 2;
-    int hLinesPerScreen = m_visibleSize.height/m_squareSide + 2;
+    int vLinesPerScreen = m_rParentScene.getVisibleSize().width/m_squareSide + 2;
+    int hLinesPerScreen = m_rParentScene.getVisibleSize().height/m_squareSide + 2;
     
     // - MIN because h or vIndex_max can be above the max index of the vector when scrolling to the very left/top edge
     int vIndex_max = MIN(vIndex + vLinesPerScreen, kSquareXCount) ;
@@ -228,13 +269,13 @@ void GameLayer::redraw(CCScrollView* pView)
             
             switch (square->m_chargeState) {
                 case kSquareChargeStateNoCharge:
-                    m_pDraw->drawPolygon(points, sizeof(points)/sizeof(points[0]), kCOLOR_BLACK, 0, kCOLOR_ORANGE);
+                    this->drawPolygon(points, sizeof(points)/sizeof(points[0]), kCOLOR_BLACK, 0, kCOLOR_ORANGE);
                     break;
                 case kSquareChargeStateCharged:
-                    m_pDraw->drawPolygon(points, sizeof(points)/sizeof(points[0]), kCOLOR_BLACK, 0, kCOLOR_BLUE);
+                    this->drawPolygon(points, sizeof(points)/sizeof(points[0]), kCOLOR_BLACK, 0, kCOLOR_BLUE);
                     break;
                 case kSquareChargeStateDischarging:
-                    m_pDraw->drawPolygon(points, sizeof(points)/sizeof(points[0]), kCOLOR_BLACK, 0, kCOLOR_WHITE);
+                    this->drawPolygon(points, sizeof(points)/sizeof(points[0]), kCOLOR_BLACK, 0, kCOLOR_WHITE);
                     break;
             }
             
@@ -253,20 +294,20 @@ void GameLayer::redraw(CCScrollView* pView)
          cIter != m_pGridOrigins_vertical->cbegin() + vIndex_max; ++cIter)
     {
         CCPoint fromPoint = CCPointMake((*cIter)->x + offset.x, 0);
-        CCPoint toPoint = CCPointMake(fromPoint.x, m_visibleSize.height);
-        m_pDraw->drawSegment(fromPoint, toPoint, 0.5f, kCOLOR_GRAY_06);
+        CCPoint toPoint = CCPointMake(fromPoint.x, m_rParentScene.getVisibleSize().height);
+        this->drawSegment(fromPoint, toPoint, 0.5f, kCOLOR_GRAY_06);
     }
     
     for (auto cIter = m_pGridOrigins_horizontal->cbegin() + hIndex;
          cIter != m_pGridOrigins_horizontal->cbegin() + hIndex_max; ++cIter)
     {
         CCPoint fromPoint = CCPointMake(0, (*cIter)->y + offset.y);
-        CCPoint toPoint = CCPointMake(m_visibleSize.width, fromPoint.y);
-        m_pDraw->drawSegment(fromPoint, toPoint, 0.5f, kCOLOR_GRAY_06);
+        CCPoint toPoint = CCPointMake(m_rParentScene.getVisibleSize().width, fromPoint.y);
+        this->drawSegment(fromPoint, toPoint, 0.5f, kCOLOR_GRAY_06);
     }
 }
 
-void GameLayer::rearrange(CCScrollView* pView)
+void GameDrawNode::rearrange(CCScrollView* pView)
 {
     CCNode* container = pView->getContainer();
     m_squareSide = floor(kSquareSide * container->getScale());
@@ -303,37 +344,108 @@ void GameLayer::rearrange(CCScrollView* pView)
     }
 }
 
-bool GameLayer::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
+
+
+
+/*****************************************************************************************
+ * implementation of GameScene
+ *****************************************************************************************/
+
+GameScene::GameScene()
+: m_visibleOrigin(CCPointZero)
+, m_visibleSize(CCSizeZero)
+, m_pGameLayer(nullptr)
+, m_pScrollView(nullptr)
+, m_pDraw(nullptr)
 {
-    std::cout << "ccTouchBegan:\n";
+    
+}
+
+GameScene::~GameScene()
+{
+    CCLOG("cocos2d: deallocing GameScene %p", this);
+}
+
+bool GameScene::init()
+{
+    if ( !CCScene::init() )
+    {
+        return false;
+    }
+    
+    m_visibleOrigin = CCDirector::sharedDirector()->getVisibleOrigin();
+    m_visibleSize = CCDirector::sharedDirector()->getVisibleSize();
+    
+    CCSprite *background = createQuickSprite(CCSizeMake(m_visibleSize.width, m_visibleSize.height), ccc3(51, 51, 51));
+    background->setAnchorPoint(CCPointZero);
+    background->setPosition(CCPointZero);
+    
+    WyrezMap* pWyresMap = new WyrezMap();
+    pWyresMap->init();
+    
+    m_pDraw = GameDrawNode::createWithSceneAndMap(*this, pWyresMap);
+    
+    m_pGameLayer = GameLayer::createWithParentScene(*this);
+    m_pGameLayer->setContentSize(pWyresMap->getContentSize());
+    
+    m_pScrollView = CCScrollView::create(m_visibleSize, m_pGameLayer);
+    m_pScrollView->setBounceable(false);
+    m_pScrollView->setFMinScale(0.25f);
+    m_pScrollView->setFMaxScale(1.0f);
+    m_pScrollView->setDelegate(this);
+    
+    m_pGameHud = GameHud::createWithParentScene(*this);
+    
+    this->addChild(background);
+    this->addChild(m_pScrollView);
+    this->addChild(m_pDraw);
+    this->addChild(m_pGameHud);
+    
+    
+    this->schedule(schedule_selector(GameScene::gameLogic), 0.1);
+
     return true;
 }
 
-void GameLayer::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
+GameScene* GameScene::scene()
 {
-    std::cout << "ccTouchMoved:\n";
+    return GameScene::create();
 }
 
-void GameLayer::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
+void GameScene::gameLogic()
 {
-    std::cout << "ccTouchEnded:\n";
+    if (m_pScrollView->isDragging()
+        || m_pScrollView->isZooming()) {
+        return;
+    }
+    m_pDraw->redraw(m_pScrollView);
 }
 
-void GameLayer::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
-{
-    std::cout << "ccTouchCancelled:\n";
-}
-
-void GameLayer::scrollViewDidScroll(CCScrollView* view)
+void GameScene::scrollViewDidScroll(CCScrollView* view)
 {
     //this->pauseSchedulerAndActions();
-    this->redraw(view);
+    m_pDraw->redraw(view);
     //this->resumeSchedulerAndActions();
 }
 
-void GameLayer::scrollViewDidZoom(CCScrollView* view)
+void GameScene::scrollViewDidZoom(CCScrollView* view)
 {
     //this->pauseSchedulerAndActions();
-    this->rearrange(view);
+    m_pDraw->rearrange(view);
     //this->resumeSchedulerAndActions();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -12,31 +12,11 @@
 #include "cocos2d.h"
 #include "cocos-ext.h"
 #include "Square.h"
+#include "WyrezMap.h"
 
 USING_NS_CC;
 USING_NS_CC_EXT;
 
-/**
- * define a create function for a specific type, such as CCLayer
- * @__TYPE__ class type to add create(x), such as CCLayer
- * @__PARENTTYPE__ type of the argument passed into the create function
- */
-#define CREATE_FUNC_WITH_PARENT(__TYPE__,__PARENTTYPE__) \
-static __TYPE__* createWithParent(const __PARENTTYPE__& parent) \
-{ \
-__TYPE__* pRet = new __TYPE__(parent); \
-if (pRet && pRet->init()) \
-{ \
-pRet->autorelease(); \
-return pRet; \
-} \
-else \
-{ \
-delete pRet; \
-pRet = NULL; \
-return NULL; \
-} \
-}
 
 #define CREATE_QUICK_SPRITE_FUNCTION \
 static CCSprite* createQuickSprite(CCSize size, ccColor3B color) \
@@ -50,7 +30,6 @@ return sprite; \
 }
 
 #define kDefaultScale 1
-#define kSquareSide 50
 #define kSquareXCount 1000
 #define kSquareYCount 1000
 
@@ -60,32 +39,67 @@ static const ccColor4F kCOLOR_ORANGE = {1.0, 0.576, 0.141, 1.0}; // filled defau
 static const ccColor4F kCOLOR_BLUE = {0.050, 0.6, 0.988, 1.0}; // charged default
 static const ccColor4F kCOLOR_WHITE = {1.0, 1.0, 1.0, 1.0}; // discharging default
 
-class GameLayer : public CCLayer, public CCScrollViewDelegate
+
+class GameScene;
+class GameLayer;
+
+
+/**********************************************
+ * header of GameHud
+ **********************************************/
+class GameHud : public CCLayer
 {
 private:
-// Inner Class: Hud
-    class Hud : public CCLayer
-    {
-    private: // members
-        const GameLayer& m_rParent;
-        
-        
-    private: // functions
-        explicit Hud(const GameLayer & parent);
-        Hud() = delete; // no default constructor
-        Hud(const Hud&) = delete; // cannot be copied
-        Hud& operator=(const Hud&) = delete; // cannot be copied
-        virtual bool init();
-        
-    public: // functions
-        virtual ~Hud();
-        CREATE_FUNC_WITH_PARENT(Hud, GameLayer);
-    };
+    const GameScene& m_rParentScene;
     
-// Class: GameLayer
-private: // members
-    CCPoint m_visibleOrigin;
-    CCSize m_visibleSize;
+    
+private:
+    explicit GameHud(const GameScene& parent);
+    GameHud() = delete; // no default constructor
+    GameHud(const GameHud&) = delete; // cannot be copied
+    GameHud& operator=(const GameHud&) = delete; // cannot be copied
+    virtual bool init();
+    
+public:
+    virtual ~GameHud();
+    static GameHud* createWithParentScene(const GameScene& rParentScene);
+};
+
+
+/**********************************************
+ * header of GameLayer
+ **********************************************/
+class GameLayer : public CCLayer
+{
+private:
+    const GameScene& m_rParentScene;
+    
+private:
+    GameLayer() = delete; // no default constructor
+    GameLayer(const GameLayer&) = delete; // cannot be copied
+    GameLayer& operator=(const GameLayer&) = delete; // cannot be copied
+    
+public:
+    explicit GameLayer(const GameScene& rParent);
+    virtual ~GameLayer();
+    virtual bool init();
+    static GameLayer* createWithParentScene(const GameScene& rParentScene);
+
+    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+};
+
+
+/**********************************************
+ * header of GameDrawNode
+ **********************************************/
+class GameDrawNode : public CCDrawNode
+{
+private:
+    const GameScene& m_rParentScene;
+    
     int m_squareSide;
     float m_scale;
     int m_squaresCount;
@@ -93,35 +107,59 @@ private: // members
     ccColor4F m_squareChargedColor;
     ccColor4F m_squareDischargingColor;
     
-    CCScrollView* m_pScrollView;
-    CCDrawNode* m_pDraw;
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
     std::vector<CCPoint*> * m_pGridOrigins_horizontal;
     std::vector<Square*> * m_pSquares;
     
+private:
+    GameDrawNode(const GameScene& rParentScene);
+    virtual bool initWithMap(WyrezMap* pWyrezMap);
     
-public: // members
+public:
+    virtual ~GameDrawNode();
+    static GameDrawNode* createWithSceneAndMap(const GameScene& rParentScene,
+                                                          WyrezMap* pWyrezMap);
     
-private: // functions
-    GameLayer();
-    virtual bool init();
-    virtual ~GameLayer();
-    void gameLogic();
     void redraw(CCScrollView* view);
     void rearrange(CCScrollView* view);
     
+    int getSquareSide() {return m_squareSide;}
+    
+};
+
+
+/**********************************************
+ * header of GameScene
+ **********************************************/
+class GameScene : public CCScene, public CCScrollViewDelegate
+{
+private:
+    CCPoint m_visibleOrigin;
+    CCSize m_visibleSize;
+    
+    GameLayer* m_pGameLayer;
+    CCScrollView* m_pScrollView;
+    GameDrawNode* m_pDraw;
+    GameHud* m_pGameHud;
+    
+private:    
+    GameScene();
+    virtual ~GameScene();
+    virtual bool init();
+    void gameLogic();
+    
 public: // functions
     CREATE_QUICK_SPRITE_FUNCTION;
-    CREATE_FUNC(GameLayer);
-    static CCScene* scene();
+    CREATE_FUNC(GameScene);
+    static GameScene* scene();
     
     virtual void scrollViewDidScroll(CCScrollView* pView);
     virtual void scrollViewDidZoom(CCScrollView* pView);
     
-    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
-    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
-    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
-    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+    const CCPoint getVisibleOrigin() const {return m_visibleOrigin;}
+    const CCSize getVisibleSize() const {return m_visibleSize;}
+    const GameLayer& getGameLayer() const {return *m_pGameLayer;}
 };
+
 
 #endif /* defined(__Wyrez__GameLayer__) */
