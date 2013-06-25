@@ -30,8 +30,6 @@ return sprite; \
 }
 
 #define kDefaultScale 1
-#define kSquareXCount 1000
-#define kSquareYCount 1000
 
 static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
 static const ccColor4F kCOLOR_GRAY_06 = {0.301, 0.301, 0.301, 1.0}; // grid default
@@ -73,6 +71,9 @@ class GameLayer : public CCLayer
 {
 private:
     const GameScene& m_rParentScene;
+    WyrezMap& m_rWyrezMap;
+    bool m_wasScrolling;
+    bool m_wasZooming;
     
 private:
     GameLayer() = delete; // no default constructor
@@ -80,15 +81,19 @@ private:
     GameLayer& operator=(const GameLayer&) = delete; // cannot be copied
     
 public:
-    explicit GameLayer(const GameScene& rParent);
+    explicit GameLayer(const GameScene& rParent, WyrezMap& rWyrezMap);
     virtual ~GameLayer();
     virtual bool init();
-    static GameLayer* createWithParentScene(const GameScene& rParentScene);
-
+    static GameLayer* createWithSceneAndMap(const GameScene& rParentScene,
+                                            WyrezMap& rWyrezMap);
+    
+    virtual void registerWithTouchDispatcher();
     virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
     virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
     virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
     virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+    
+    void setWasZooming(bool b) {m_wasZooming = b;}
 };
 
 
@@ -99,26 +104,22 @@ class GameDrawNode : public CCDrawNode
 {
 private:
     const GameScene& m_rParentScene;
+    WyrezMap& m_rWyrezMap;
     
     int m_squareSide;
     float m_scale;
-    int m_squaresCount;
     ccColor4F m_squareFillColor;
     ccColor4F m_squareChargedColor;
     ccColor4F m_squareDischargingColor;
     
-    std::vector<CCPoint*> * m_pGridOrigins_vertical;
-    std::vector<CCPoint*> * m_pGridOrigins_horizontal;
-    std::vector<Square*> * m_pSquares;
-    
 private:
-    GameDrawNode(const GameScene& rParentScene);
-    virtual bool initWithMap(WyrezMap* pWyrezMap);
+    GameDrawNode(const GameScene& rParentScene, WyrezMap& rWyrezMap);
+    virtual bool init();
     
 public:
     virtual ~GameDrawNode();
     static GameDrawNode* createWithSceneAndMap(const GameScene& rParentScene,
-                                                          WyrezMap* pWyrezMap);
+                                                          WyrezMap& rWyrezMap);
     
     void redraw(CCScrollView* view);
     void rearrange(CCScrollView* view);
@@ -137,6 +138,7 @@ private:
     CCPoint m_visibleOrigin;
     CCSize m_visibleSize;
     
+    WyrezMap* m_pWyrezMap;
     GameLayer* m_pGameLayer;
     CCScrollView* m_pScrollView;
     GameDrawNode* m_pDraw;

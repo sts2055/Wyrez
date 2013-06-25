@@ -26,13 +26,16 @@ typedef enum {
 
 class Square : public CCRect
 {
+    
 public:
     SquareFillStateTypes m_fillState;
     SquareChargeStateTypes m_chargeState;
+    std::vector<Square*> * m_surroundingSquares;
     
 public:
     Square();
     Square(float x, float y, float width, float height);
+    virtual ~Square();
 };
 
 #endif /* defined(__Wyrez__Square__) */

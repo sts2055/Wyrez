@@ -25,9 +25,11 @@ private:
     int m_squareSide;
     int m_squaresCount_vertical;
     int m_squaresCount_horizontal;
+    int m_squaresCount_total;
     
     CCSize m_contentSize;
     
+public:
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
     std::vector<CCPoint*> * m_pGridOrigins_horizontal;
     std::vector<Square*> * m_pSquares;
@@ -36,13 +38,16 @@ public:
     WyrezMap();
     virtual ~WyrezMap();
     virtual bool init();
+    void setupSurroundingSquares();
+    void toggleFillForTouchLocation(CCPoint touchLocation);
     
     const int getSquaresCountVertical() {return m_squaresCount_vertical;}
     const int getSquaresCountHorizontal() {return m_squaresCount_horizontal;}
+    const int getSquaresCountTotal() {return m_squaresCount_total;}
     const CCSize getContentSize() {return m_contentSize;}
-    std::vector<CCPoint*>* getGridOriginsVertical() {return m_pGridOrigins_vertical;}
-    std::vector<CCPoint*>* getGridOriginsHorizontal() {return m_pGridOrigins_horizontal;}
-    std::vector<Square*>* getSquares() {return m_pSquares;}
+    //std::vector<CCPoint*>* getGridOriginsVertical() {return m_pGridOrigins_vertical;}
+    //std::vector<CCPoint*>* getGridOriginsHorizontal() {return m_pGridOrigins_horizontal;}
+    //std::vector<Square*>* getSquares() {return m_pSquares;}
     
 };
 
