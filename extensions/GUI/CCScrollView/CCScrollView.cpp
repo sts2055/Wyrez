@@ -605,7 +605,7 @@ bool CCScrollView::ccTouchBegan(CCTouch* touch, CCEvent* event)
     }
     
     CCRect frame = getViewRect();
-
+    
     //dispatcher does not know about clipping. reject touches outside visible bounds.
     if (m_pTouches->count() > 2 ||
         m_bTouchMoved          ||
@@ -634,7 +634,7 @@ bool CCScrollView::ccTouchBegan(CCTouch* touch, CCEvent* event)
         m_fTouchLength = ccpDistance(m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(0)),
                                    m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(1)));
         m_bDragging  = false;
-    } 
+    }
     return true;
 }
 

@@ -18,6 +18,11 @@ USING_NS_CC;
 #define kDefaultSquaresVertical 100
 #define kDefaultSquaresHorizontal 100
 
+static const ccColor3B kDEFAULT_COLOR_BACKGROUND    = {63,  63, 63}; // dark gray
+static const ccColor3B kDEFAULT_COLOR_GRIDLINES     = {99,  99, 99}; // lighter gray
+static const ccColor3B kDEFAULT_COLOR_FILL          = {255, 147,36}; // orange
+static const ccColor3B kDEFAULT_COLOR_CHARGED       = {13,  153,252}; // light blue
+static const ccColor3B kDEFAULT_COLOR_DISCHARGING   = {255, 255,255}; // white
 
 class WyrezMap
 {
@@ -26,6 +31,12 @@ private:
     int m_squaresCount_vertical;
     int m_squaresCount_horizontal;
     int m_squaresCount_total;
+    
+    ccColor3B m_backgroundColor;
+    ccColor3B m_gridLinesColor;
+    ccColor3B m_squareFillColor;
+    ccColor3B m_squareChargedColor;
+    ccColor3B m_squareDischargingColor;
     
     CCSize m_contentSize;
     
@@ -50,8 +61,14 @@ public:
     //std::vector<CCPoint*>* getGridOriginsHorizontal() {return m_pGridOrigins_horizontal;}
     //std::vector<Square*>* getSquares() {return m_pSquares;}
     
-    typedef unsigned long long timestamp_t;
+    ccColor3B getBackgroundColor() {return m_backgroundColor;}
+    ccColor3B getGridLinesColor() {return m_gridLinesColor;}
+    ccColor3B getSquareFillColor() {return m_squareFillColor;}
+    ccColor3B getSquareChargedColor() {return m_squareChargedColor;}
+    ccColor3B getSquareDischargingColor() {return m_squareDischargingColor;}
     
+    
+    typedef unsigned long long timestamp_t;
     static timestamp_t
     get_timestamp ()
     {

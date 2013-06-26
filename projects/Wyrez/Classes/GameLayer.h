@@ -32,10 +32,6 @@ return sprite; \
 #define kDefaultScale 1
 
 static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
-static const ccColor4F kCOLOR_GRAY_06 = {0.301, 0.301, 0.301, 1.0}; // grid default
-static const ccColor4F kCOLOR_ORANGE = {1.0, 0.576, 0.141, 1.0}; // filled default
-static const ccColor4F kCOLOR_BLUE = {0.050, 0.6, 0.988, 1.0}; // charged default
-static const ccColor4F kCOLOR_WHITE = {1.0, 1.0, 1.0, 1.0}; // discharging default
 
 
 class GameScene;
@@ -49,18 +45,32 @@ class GameHud : public CCLayer
 {
 private:
     const GameScene& m_rParentScene;
-    
+    WyrezMap& m_rWyrezMap;
+    CCMenu* m_active_menu;
+    CCMenuItemSprite* m_brush;
     
 private:
-    explicit GameHud(const GameScene& parent);
+    explicit GameHud(const GameScene& parent, WyrezMap& rWyrezMap);
     GameHud() = delete; // no default constructor
     GameHud(const GameHud&) = delete; // cannot be copied
     GameHud& operator=(const GameHud&) = delete; // cannot be copied
     virtual bool init();
     
+    CCSprite* createCustomSprite(std::string name, ccColor3B color);
+    CCMenuItemSprite* createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selector);
+    void loadMenu_displayMode();
+    void loadMenu_buildMode();
+    void doNothing() {}; // used for brush mode
+    
+    virtual void registerWithTouchDispatcher();
+    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+    
 public:
     virtual ~GameHud();
-    static GameHud* createWithParentScene(const GameScene& rParentScene);
+    static GameHud* createWithParentScene(const GameScene& rParentScene, WyrezMap& rWyrezMap);
 };
 
 
@@ -108,6 +118,8 @@ private:
     
     int m_squareSide;
     float m_scale;
+    
+    ccColor4F m_gridLinesColor;
     ccColor4F m_squareFillColor;
     ccColor4F m_squareChargedColor;
     ccColor4F m_squareDischargingColor;
@@ -135,14 +147,15 @@ public:
 class GameScene : public CCScene, public CCScrollViewDelegate
 {
 private:
-    CCPoint m_visibleOrigin;
-    CCSize m_visibleSize;
-    
     WyrezMap* m_pWyrezMap;
     GameLayer* m_pGameLayer;
     CCScrollView* m_pScrollView;
     GameDrawNode* m_pDraw;
     GameHud* m_pGameHud;
+    
+public:
+    CCPoint m_visibleOrigin;
+    CCSize m_visibleSize;
     
 private:    
     GameScene();
@@ -158,9 +171,6 @@ public: // functions
     
     virtual void scrollViewDidScroll(CCScrollView* pView);
     virtual void scrollViewDidZoom(CCScrollView* pView);
-    
-    const CCPoint getVisibleOrigin() const {return m_visibleOrigin;}
-    const CCSize getVisibleSize() const {return m_visibleSize;}
     const GameLayer& getGameLayer() const {return *m_pGameLayer;}
 };
 

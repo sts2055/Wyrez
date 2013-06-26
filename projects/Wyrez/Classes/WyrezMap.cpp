@@ -13,6 +13,11 @@ WyrezMap::WyrezMap()
 , m_squaresCount_vertical(0)
 , m_squaresCount_horizontal(0)
 , m_squaresCount_total(0)
+, m_backgroundColor({0,0,0})
+, m_gridLinesColor({0,0,0})
+, m_squareFillColor({0,0,0})
+, m_squareChargedColor({0,0,0})
+, m_squareDischargingColor({0,0,0})
 , m_contentSize(CCSizeZero)
 , m_pGridOrigins_vertical(nullptr)
 , m_pGridOrigins_horizontal(nullptr)
@@ -52,6 +57,12 @@ bool WyrezMap::init()
     m_squaresCount_vertical = kDefaultSquaresVertical;
     m_squaresCount_horizontal = kDefaultSquaresHorizontal;
     m_squaresCount_total = m_squaresCount_vertical * m_squaresCount_horizontal;
+    
+    m_backgroundColor           = kDEFAULT_COLOR_BACKGROUND;
+    m_gridLinesColor            = kDEFAULT_COLOR_GRIDLINES;
+    m_squareFillColor           = kDEFAULT_COLOR_FILL;
+    m_squareChargedColor        = kDEFAULT_COLOR_CHARGED;
+    m_squareDischargingColor    = kDEFAULT_COLOR_DISCHARGING;
     
     m_contentSize = CCSizeMake(m_squaresCount_vertical * kSquareSide, m_squaresCount_horizontal * kSquareSide);
     
