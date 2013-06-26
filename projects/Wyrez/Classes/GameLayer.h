@@ -13,6 +13,7 @@
 #include "cocos-ext.h"
 #include "Square.h"
 #include "WyrezMap.h"
+#include "BrushMenuItemSprite.h"
 
 USING_NS_CC;
 USING_NS_CC_EXT;
@@ -37,20 +38,45 @@ static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
 class GameScene;
 class GameLayer;
 
+/**********************************************
+ * header of GameScrollView
+ **********************************************/
+class GameScrollView : public CCScrollView
+{
+private:
+    bool m_shouldScroll;
+    
+private:
+    GameScrollView();
+    
+public:
+    virtual ~GameScrollView();
+    
+    void setFMaxScale(float f) { m_fMaxScale = f; };
+    void setFMinScale(float f) { m_fMinScale = f; };
+    
+    static GameScrollView* create(CCSize size, CCNode* container = NULL);
+    
+    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
+    
+    void setShouldScroll(bool b) {m_shouldScroll = b;}
+};
+
+
 
 /**********************************************
  * header of GameHud
  **********************************************/
-class GameHud : public CCLayer
+class GameHud : public CCLayer, public BrushMenuItemSpriteDelegate
 {
 private:
-    const GameScene& m_rParentScene;
+    GameScene& m_rParentScene;
     WyrezMap& m_rWyrezMap;
     CCMenu* m_active_menu;
-    CCMenuItemSprite* m_brush;
+    bool m_brushIsSelected;
     
 private:
-    explicit GameHud(const GameScene& parent, WyrezMap& rWyrezMap);
+    explicit GameHud(GameScene& parent, WyrezMap& rWyrezMap);
     GameHud() = delete; // no default constructor
     GameHud(const GameHud&) = delete; // cannot be copied
     GameHud& operator=(const GameHud&) = delete; // cannot be copied
@@ -62,15 +88,12 @@ private:
     void loadMenu_buildMode();
     void doNothing() {}; // used for brush mode
     
-    virtual void registerWithTouchDispatcher();
-    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
-    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
-    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
-    virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void brushMenuItemSpriteIsSelected();
+    virtual void brushMenuItemSpriteIsUnselected();
     
 public:
     virtual ~GameHud();
-    static GameHud* createWithParentScene(const GameScene& rParentScene, WyrezMap& rWyrezMap);
+    static GameHud* createWithParentScene(GameScene& rParentScene, WyrezMap& rWyrezMap);
 };
 
 
@@ -149,7 +172,7 @@ class GameScene : public CCScene, public CCScrollViewDelegate
 private:
     WyrezMap* m_pWyrezMap;
     GameLayer* m_pGameLayer;
-    CCScrollView* m_pScrollView;
+    GameScrollView* m_pScrollView;
     GameDrawNode* m_pDraw;
     GameHud* m_pGameHud;
     
@@ -169,6 +192,8 @@ public: // functions
     CREATE_FUNC(GameScene);
     static GameScene* scene();
     
+    void disableScrolling();
+    void enableScrolling();
     virtual void scrollViewDidScroll(CCScrollView* pView);
     virtual void scrollViewDidZoom(CCScrollView* pView);
     const GameLayer& getGameLayer() const {return *m_pGameLayer;}

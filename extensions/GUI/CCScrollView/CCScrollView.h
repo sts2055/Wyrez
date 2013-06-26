@@ -202,9 +202,6 @@ public:
     virtual void addChild(CCNode * child, int zOrder);
     virtual void addChild(CCNode * child);
     void setTouchEnabled(bool e);
-    
-    void setFMaxScale(float f) { m_fMaxScale = f; }; // added by STS
-    void setFMinScale(float f) { m_fMinScale = f; }; // added by STS
 private:
     /**
      * Relocates the container at the proper offset, in bounds of max/min offsets.

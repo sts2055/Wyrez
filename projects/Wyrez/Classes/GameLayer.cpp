@@ -8,14 +8,52 @@
 
 #include "GameLayer.h"
 
+/*****************************************************************************************
+ * implementation of GameScrollView
+ *****************************************************************************************/
+GameScrollView::GameScrollView()
+: m_shouldScroll(true)
+{
+    
+}
+
+GameScrollView::~GameScrollView()
+{
+    CCLOG("cocos2d: deallocing ~GameScrollView %p", this);
+}
+
+GameScrollView* GameScrollView::create(CCSize size, CCNode* container/* = NULL*/)
+{
+    GameScrollView* pRet = new GameScrollView();
+    if (pRet && pRet->initWithViewSize(size, container))
+    {
+        pRet->autorelease();
+    }
+    else
+    {
+        CC_SAFE_DELETE(pRet);
+    }
+    return pRet;
+}
+
+void GameScrollView::ccTouchMoved(CCTouch* touch, CCEvent* event)
+{
+    if (!m_shouldScroll) {
+        return;
+    }
+    
+    CCScrollView::ccTouchMoved(touch, event);
+}
+
 
 /*****************************************************************************************
  * implementation of GameHud
  *****************************************************************************************/
-GameHud::GameHud(const GameScene& rParentScene, WyrezMap& rWyrezMap)
+GameHud::GameHud(GameScene& rParentScene, WyrezMap& rWyrezMap)
 : m_rParentScene(rParentScene)
 , m_rWyrezMap(rWyrezMap)
 , m_active_menu(nullptr)
+, m_brushIsSelected(false)
 {
 }
 
@@ -31,13 +69,12 @@ bool GameHud::init()
         return false;
     }
     
-    this->setTouchEnabled(true);
     this->loadMenu_displayMode();
     
     return true;
 }
 
-GameHud* GameHud::createWithParentScene(const GameScene& rParentScene, WyrezMap& rWyrezMap)
+GameHud* GameHud::createWithParentScene(GameScene& rParentScene, WyrezMap& rWyrezMap)
 {
     GameHud* pRet = new GameHud(rParentScene, rWyrezMap);
     if (pRet && pRet->init())
@@ -118,17 +155,33 @@ void GameHud::loadMenu_buildMode()
     button_info->setPosition(ccp(button_build->getPosition().x - button_info->getNormalImage()->getContentSize().width - margin,
                                   button_build->getPosition().y));
     
+    
+    
+    CCSprite* pNormalSprite = this->createCustomSprite(std::string("build_menu_button_frame.png"), m_rWyrezMap.getSquareChargedColor());
+    CCSprite* pNormalSprite_icon = this->createCustomSprite(std::string("build_menu_icon_brush.png"), m_rWyrezMap.getSquareDischargingColor());
+    pNormalSprite_icon->setPosition(ccp(pNormalSprite->getContentSize().width/2, pNormalSprite->getContentSize().height/2));
+    pNormalSprite->addChild(pNormalSprite_icon);
+    
+    CCSprite* pSelectedSprite = this->createCustomSprite(std::string("build_menu_button_frame.png"), m_rWyrezMap.getSquareChargedColor());
+    
+    
+    BrushMenuItemSprite *brush = new BrushMenuItemSprite();
+    brush->initWithNormalSprite(pNormalSprite, pSelectedSprite, nullptr, this, menu_selector(GameHud::doNothing));
+    brush->setDelegate(this);
+    brush->autorelease();
+    brush->setPosition(ccp(0 + brush->getNormalImage()->getContentSize().width/2 + margin,
+                                     m_rParentScene.m_visibleSize.height * 0.5 + brush->getNormalImage()->getContentSize().height/2));
+    
+    
     CCMenuItemSprite* button_freedraw = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_brush.png"),
                                                                            menu_selector(GameHud::doNothing));
     button_freedraw->setPosition(ccp(0 + button_freedraw->getNormalImage()->getContentSize().width/2 + margin,
                                   m_rParentScene.m_visibleSize.height * 0.5 + button_freedraw->getNormalImage()->getContentSize().height/2));
-    button_freedraw->setTag(666);
-    m_brush = button_freedraw;
     
     CCArray* pMenuItems = CCArray::createWithCapacity(1);
     pMenuItems->addObject(button_build);
     pMenuItems->addObject(button_info);
-    pMenuItems->addObject(button_freedraw);
+    pMenuItems->addObject(brush);
     
     CCMenu* pMenu = CCMenu::createWithArray(pMenuItems);
     pMenu->setAnchorPoint(CCPointZero);
@@ -137,49 +190,26 @@ void GameHud::loadMenu_buildMode()
     m_active_menu = pMenu;
 }
 
-void GameHud::registerWithTouchDispatcher()
+void GameHud::brushMenuItemSpriteIsSelected()
 {
-    CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this, GameHud::getTouchPriority(), false);
-}
-
-bool GameHud::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
-{
-    std::cout << "ccTouchBegan:\n";
-    if (m_brush != nullptr) {
-        std::cout << "brush is not nullptr\n";
-        if (m_brush->isSelected()) {
-            std::cout << "brush is selected:\n";
-        }
+    std::cout << "brushMenuItemSpriteIsSelected:\n";
+    if (m_brushIsSelected) {
+        m_brushIsSelected = false;
+        m_rParentScene.enableScrolling();
     }
-    return true;
-}
-
-void GameHud::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
-{
-    if (m_brush != nullptr) {
-        std::cout << "brush is not nullptr\n";
-        if (m_brush->isSelected()) {
-            std::cout << "brush is selected:\n";
-        }
+    else {
+        m_brushIsSelected = true;
+        m_rParentScene.disableScrolling();
     }
-    std::cout << "ccTouchMoved:\n";
 }
 
-void GameHud::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
+void GameHud::brushMenuItemSpriteIsUnselected()
 {
-    if (m_brush != nullptr) {
-        std::cout << "brush is not nullptr\n";
-        if (m_brush->isSelected()) {
-            std::cout << "brush is selected:\n";
-        }
-    }
-    std::cout << "ccTouchEnded:\n";
+    std::cout << "brushMenuItemSpriteIsUnselected:\n";
 }
 
-void GameHud::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
-{
-    std::cout << "ccTouchCancelled:\n";
-}
+
+
 
 
 
@@ -493,7 +523,7 @@ bool GameScene::init()
     m_pGameLayer = GameLayer::createWithSceneAndMap(*this, *m_pWyrezMap);
     m_pGameLayer->setContentSize(m_pWyrezMap->getContentSize());
     
-    m_pScrollView = CCScrollView::create(m_visibleSize, m_pGameLayer);
+    m_pScrollView = GameScrollView::create(m_visibleSize, m_pGameLayer);
     m_pScrollView->setBounceable(false);
     // the scrollview should not zoom out to show space beyond its bounds
     // (it would cause an out of bounds exception in one of the vectors)
@@ -581,6 +611,16 @@ void GameScene::handleCharges()
     {
         pIter->m_chargeState = kSquareChargeStateNoCharge;
     }
+}
+
+void GameScene::disableScrolling()
+{
+    m_pScrollView->setShouldScroll(false);
+}
+
+void GameScene::enableScrolling()
+{
+    m_pScrollView->setShouldScroll(true);
 }
 
 void GameScene::scrollViewDidScroll(CCScrollView* view)
