@@ -73,7 +73,6 @@ private:
     GameScene& m_rParentScene;
     WyrezMap& m_rWyrezMap;
     CCMenu* m_active_menu;
-    bool m_brushIsSelected;
     
 private:
     explicit GameHud(GameScene& parent, WyrezMap& rWyrezMap);

@@ -53,7 +53,6 @@ GameHud::GameHud(GameScene& rParentScene, WyrezMap& rWyrezMap)
 : m_rParentScene(rParentScene)
 , m_rWyrezMap(rWyrezMap)
 , m_active_menu(nullptr)
-, m_brushIsSelected(false)
 {
 }
 
@@ -192,20 +191,12 @@ void GameHud::loadMenu_buildMode()
 
 void GameHud::brushMenuItemSpriteIsSelected()
 {
-    std::cout << "brushMenuItemSpriteIsSelected:\n";
-    if (m_brushIsSelected) {
-        m_brushIsSelected = false;
-        m_rParentScene.enableScrolling();
-    }
-    else {
-        m_brushIsSelected = true;
-        m_rParentScene.disableScrolling();
-    }
+    m_rParentScene.disableScrolling();
 }
 
-void GameHud::brushMenuItemSpriteIsUnselected()
+void GameHud::brushMenuItemSpriteIsUnselected() // TODO might not need this one
 {
-    std::cout << "brushMenuItemSpriteIsUnselected:\n";
+    m_rParentScene.enableScrolling();
 }
 
 

@@ -16,6 +16,7 @@ class BrushMenuItemSpriteDelegate
 public:
     virtual ~BrushMenuItemSpriteDelegate() {}
     virtual void brushMenuItemSpriteIsSelected() = 0;
+    virtual void brushMenuItemSpriteIsUnselected() = 0;
 };
 
 class BrushMenuItemSprite : public cocos2d::CCMenuItemSprite

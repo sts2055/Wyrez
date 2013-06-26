@@ -28,6 +28,6 @@ void BrushMenuItemSprite::unselected()
     CCMenuItemSprite::unselected();
     
     if (m_pDelegate != nullptr) {
-        m_pDelegate->brushMenuItemSpriteIsSelected();
+        m_pDelegate->brushMenuItemSpriteIsUnselected();
     }
 }
