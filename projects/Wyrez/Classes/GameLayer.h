@@ -76,9 +76,7 @@ private:
     
 private:
     explicit GameHud(GameScene& parent, WyrezMap& rWyrezMap);
-    GameHud() = delete; // no default constructor
-    GameHud(const GameHud&) = delete; // cannot be copied
-    GameHud& operator=(const GameHud&) = delete; // cannot be copied
+    GameHud() = delete;
     virtual bool init();
     
     CCSprite* createCustomSprite(std::string name, ccColor3B color);
@@ -102,21 +100,21 @@ public:
 class GameLayer : public CCLayer
 {
 private:
-    const GameScene& m_rParentScene;
+    GameScene& m_rParentScene;
     WyrezMap& m_rWyrezMap;
     bool m_wasScrolling;
     bool m_wasZooming;
+    bool m_brushModeActive;
+    Square* m_brushModeCurrentSquare;
     
 private:
-    GameLayer() = delete; // no default constructor
-    GameLayer(const GameLayer&) = delete; // cannot be copied
-    GameLayer& operator=(const GameLayer&) = delete; // cannot be copied
+    GameLayer() = delete;
     
 public:
-    explicit GameLayer(const GameScene& rParent, WyrezMap& rWyrezMap);
+    explicit GameLayer(GameScene& rParent, WyrezMap& rWyrezMap);
     virtual ~GameLayer();
     virtual bool init();
-    static GameLayer* createWithSceneAndMap(const GameScene& rParentScene,
+    static GameLayer* createWithSceneAndMap(GameScene& rParentScene,
                                             WyrezMap& rWyrezMap);
     
     virtual void registerWithTouchDispatcher();
@@ -126,6 +124,7 @@ public:
     virtual void ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent);
     
     void setWasZooming(bool b) {m_wasZooming = b;}
+    void setBrushModeActive(bool b) {m_brushModeActive = b;}
 };
 
 
@@ -147,7 +146,8 @@ private:
     ccColor4F m_squareDischargingColor;
     
 private:
-    GameDrawNode(const GameScene& rParentScene, WyrezMap& rWyrezMap);
+    explicit GameDrawNode(const GameScene& rParentScene, WyrezMap& rWyrezMap);
+    GameDrawNode() = delete;
     virtual bool init();
     
 public:
@@ -191,6 +191,7 @@ public: // functions
     CREATE_FUNC(GameScene);
     static GameScene* scene();
     
+    void redrawDrawNode();
     void disableScrolling();
     void enableScrolling();
     virtual void scrollViewDidScroll(CCScrollView* pView);

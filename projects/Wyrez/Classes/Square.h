@@ -42,6 +42,8 @@ public:
     // squares are positioned and push_back'ed consecutively starting from 0,0 (bottom left)
     // whilst first filling the column (going up) before moving on to the next column to the right.
     bool operator<( const Square& val ) const { return m_index < val.m_index; }
+        
+    bool operator!=( const Square& val ) const { return m_index != val.m_index; }
 };
 
 #endif /* defined(__Wyrez__Square__) */

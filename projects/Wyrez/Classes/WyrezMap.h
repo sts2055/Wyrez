@@ -53,6 +53,7 @@ public:
     void setupSurroundingSquares();
     void toggleFillForTouchLocation(CCPoint touchLocation);
     
+    
     const int getSquaresCountVertical() {return m_squaresCount_vertical;}
     const int getSquaresCountHorizontal() {return m_squaresCount_horizontal;}
     const int getSquaresCountTotal() {return m_squaresCount_total;}

@@ -207,11 +207,13 @@ void GameHud::brushMenuItemSpriteIsUnselected() // TODO might not need this one
 /*****************************************************************************************
  * implementation of GameLayer
  *****************************************************************************************/
-GameLayer::GameLayer(const GameScene& rParent, WyrezMap& rWyrezMap)
+GameLayer::GameLayer(GameScene& rParent, WyrezMap& rWyrezMap)
 : m_rParentScene(rParent)
 , m_rWyrezMap(rWyrezMap)
 , m_wasScrolling(false)
 , m_wasZooming(false)
+, m_brushModeActive(false)
+, m_brushModeCurrentSquare(nullptr)
 {
 }
 
@@ -246,6 +248,21 @@ bool GameLayer::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
 void GameLayer::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
 {
     m_wasScrolling = true;
+    
+    if (m_brushModeActive) {
+        CCPoint touchLocation = this->convertTouchToNodeSpace(pTouch);
+        CCPoint squareLocation = ccp(floor(touchLocation.x/kSquareSide), floor(touchLocation.y/kSquareSide));
+        int index = squareLocation.x * m_rWyrezMap.getSquaresCountHorizontal() + squareLocation.y;
+        Square* pSquare = m_rWyrezMap.m_pSquares_all->at(index);
+        
+        // If the touched square is new, we toggle its fillstate and draw it
+        // This is to prevent multiple toggles and draws on the same square as the touch moves
+        if (m_brushModeCurrentSquare == nullptr || m_brushModeCurrentSquare != pSquare) {
+            m_brushModeCurrentSquare = pSquare;
+            m_rWyrezMap.toggleFillForTouchLocation(touchLocation);
+            m_rParentScene.redrawDrawNode();
+        }
+    }
 }
 
 void GameLayer::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
@@ -271,7 +288,7 @@ void GameLayer::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
     std::cout << "ccTouchCancelled:\n";
 }
 
-GameLayer* GameLayer::createWithSceneAndMap(const GameScene& rParentScene,
+GameLayer* GameLayer::createWithSceneAndMap(GameScene& rParentScene,
                                             WyrezMap& rWyrezMap)
 {
     GameLayer* pRet = new GameLayer(rParentScene, rWyrezMap);
@@ -607,11 +624,18 @@ void GameScene::handleCharges()
 void GameScene::disableScrolling()
 {
     m_pScrollView->setShouldScroll(false);
+    m_pGameLayer->setBrushModeActive(true);
 }
 
 void GameScene::enableScrolling()
 {
     m_pScrollView->setShouldScroll(true);
+    m_pGameLayer->setBrushModeActive(false);
+}
+
+void GameScene::redrawDrawNode()
+{
+    m_pDraw->redraw(m_pScrollView);
 }
 
 void GameScene::scrollViewDidScroll(CCScrollView* view)
