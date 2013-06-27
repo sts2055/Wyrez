@@ -52,6 +52,7 @@ private:
 public:
     virtual ~GameScrollView();
     
+    
     void setFMaxScale(float f) { m_fMaxScale = f; };
     void setFMinScale(float f) { m_fMinScale = f; };
     
@@ -138,7 +139,6 @@ private:
     WyrezMap& m_rWyrezMap;
     
     int m_squareSide;
-    float m_scale;
     
     ccColor4F m_gridLinesColor;
     ccColor4F m_squareFillColor;

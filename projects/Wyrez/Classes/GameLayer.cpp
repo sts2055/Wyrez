@@ -11,6 +11,13 @@
 /*****************************************************************************************
  * implementation of GameScrollView
  *****************************************************************************************/
+#define MOVE_INCH            7.0f/160.0f
+static float convertDistanceFromPointToInch(float pointDis)
+{
+    float factor = ( CCEGLView::sharedOpenGLView()->getScaleX() + CCEGLView::sharedOpenGLView()->getScaleY() ) / 2;
+    return pointDis * factor / CCDevice::getDPI();
+}
+
 GameScrollView::GameScrollView()
 : m_shouldScroll(true)
 {
@@ -42,7 +49,84 @@ void GameScrollView::ccTouchMoved(CCTouch* touch, CCEvent* event)
         return;
     }
     
-    CCScrollView::ccTouchMoved(touch, event);
+    if (!this->isVisible())
+    {
+        return;
+    }
+    
+    if (m_pTouches->containsObject(touch))
+    {
+        if (m_pTouches->count() == 1 && m_bDragging)
+        { // scrolling
+            CCPoint moveDistance, newPoint, maxInset, minInset;
+            CCRect  frame;
+            float newX, newY;
+            
+            frame = getViewRect();
+            
+            newPoint     = this->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(0));
+            moveDistance = ccpSub(newPoint, m_tTouchPoint);
+            
+            float dis = 0.0f;
+            if (m_eDirection == kCCScrollViewDirectionVertical)
+            {
+                dis = moveDistance.y;
+            }
+            else if (m_eDirection == kCCScrollViewDirectionHorizontal)
+            {
+                dis = moveDistance.x;
+            }
+            else
+            {
+                dis = sqrtf(moveDistance.x*moveDistance.x + moveDistance.y*moveDistance.y);
+            }
+            
+            if (!m_bTouchMoved && fabs(convertDistanceFromPointToInch(dis)) < MOVE_INCH )
+            {
+                //CCLOG("Invalid movement, distance = [%f, %f], disInch = %f", moveDistance.x, moveDistance.y);
+                return;
+            }
+            
+            if (!m_bTouchMoved)
+            {
+                moveDistance = CCPointZero;
+            }
+            
+            m_tTouchPoint = newPoint;
+            m_bTouchMoved = true;
+            
+            if (frame.containsPoint(this->convertToWorldSpace(newPoint)))
+            {
+                switch (m_eDirection)
+                {
+                    case kCCScrollViewDirectionVertical:
+                        moveDistance = ccp(0.0f, moveDistance.y);
+                        break;
+                    case kCCScrollViewDirectionHorizontal:
+                        moveDistance = ccp(moveDistance.x, 0.0f);
+                        break;
+                    default:
+                        break;
+                }
+                
+                maxInset = m_fMaxInset;
+                minInset = m_fMinInset;
+                
+                newX     = m_pContainer->getPosition().x + moveDistance.x;
+                newY     = m_pContainer->getPosition().y + moveDistance.y;
+                
+                m_tScrollDistance = moveDistance;
+                this->setContentOffset(ccp(newX, newY));
+            }
+        }
+        else if (m_pTouches->count() == 2 && !m_bDragging)
+        {
+            const float len = ccpDistance(m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(0)),
+                                          m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(1)));
+            this->setZoomScale( floorf((this->getZoomScale()*len/m_fTouchLength) * 10 + 0.5) / 10 );
+            m_bZooming = true;
+        }
+    }
 }
 
 
@@ -279,7 +363,6 @@ void GameLayer::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
     }
     
     CCPoint touchLocation = this->convertTouchToNodeSpace(pTouch);
-    //std::cout << "ccTouchEnded - location x:" << touchLocation.x << " y:" << touchLocation.y << "\n";
     m_rWyrezMap.toggleFillForTouchLocation(touchLocation);
 }
 
@@ -315,7 +398,6 @@ GameDrawNode::GameDrawNode(const GameScene& rParentScene, WyrezMap& rWyrezMap)
 : m_rParentScene(rParentScene)
 , m_rWyrezMap(rWyrezMap)
 , m_squareSide(0)
-, m_scale(0)
 , m_gridLinesColor({0.0,0.0,0.0,0.0})
 , m_squareFillColor({0.0,0.0,0.0,0.0})
 , m_squareChargedColor({0.0,0.0,0.0,0.0})
@@ -337,7 +419,6 @@ bool GameDrawNode::init()
     }
     
     m_squareSide = kSquareSide;
-    m_scale = kDefaultScale;
     
     m_gridLinesColor = ccc4FFromccc3B(m_rWyrezMap.getGridLinesColor());
     m_squareFillColor = ccc4FFromccc3B(m_rWyrezMap.getSquareFillColor());
@@ -391,7 +472,7 @@ void GameDrawNode::redraw(CCScrollView* pView)
         for (int j = i * m_rWyrezMap.getSquaresCountVertical() + hIndex;
              j < i * m_rWyrezMap.getSquaresCountVertical() + hIndex + hLinesPerScreen; j++)
         {
-            if (j >= m_rWyrezMap.getSquaresCountTotal()) {
+            if (j >= m_rWyrezMap.m_pSquares_all->size() - 1) {
                 break;
             }
             
@@ -451,8 +532,7 @@ void GameDrawNode::redraw(CCScrollView* pView)
 void GameDrawNode::rearrange(CCScrollView* pView)
 {
     CCNode* container = pView->getContainer();
-    m_squareSide = floor(kSquareSide * container->getScale());
-    m_scale = container->getScale();
+    m_squareSide = kSquareSide * container->getScale();
     
     int i = 0;
     for (auto cIter = m_rWyrezMap.m_pGridOrigins_vertical->begin();
@@ -535,9 +615,12 @@ bool GameScene::init()
     m_pScrollView->setBounceable(false);
     // the scrollview should not zoom out to show space beyond its bounds
     // (it would cause an out of bounds exception in one of the vectors)
-    // we also set a limit for the zoom out scale - 0.15 as of now
-    float xMinScale = MAX(m_visibleSize.width / m_pWyrezMap->getContentSize().width, 0.15);
-    float yMinScale = MAX(m_visibleSize.height / m_pWyrezMap->getContentSize().height, 0.15);
+    // - it may only zoom in increments/decrements of 0.1
+    // - the zoom out scale is limited to 0.2 or higher (rounded up) if one axis is shorter than what would be displayed at 0.2
+    float xMinScale = ceilf(m_visibleSize.width / m_pWyrezMap->getContentSize().width * 10) / 10;
+    xMinScale = MAX(xMinScale, 0.2);
+    float yMinScale = ceilf(m_visibleSize.height / m_pWyrezMap->getContentSize().height * 10) / 10;
+    yMinScale = MAX(yMinScale, 0.2);
     m_pScrollView->setFMinScale(yMinScale > xMinScale ? yMinScale : xMinScale);
     m_pScrollView->setFMaxScale(1.0f);
     m_pScrollView->setDelegate(this);

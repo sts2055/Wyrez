@@ -15,8 +15,8 @@
 USING_NS_CC;
 
 #define kSquareSide 50
-#define kDefaultSquaresVertical 100
-#define kDefaultSquaresHorizontal 100
+#define kDefaultSquaresVertical 150
+#define kDefaultSquaresHorizontal 150
 
 static const ccColor3B kDEFAULT_COLOR_BACKGROUND    = {63,  63, 63}; // dark gray
 static const ccColor3B kDEFAULT_COLOR_GRIDLINES     = {99,  99, 99}; // lighter gray
@@ -53,7 +53,7 @@ public:
     void setupSurroundingSquares();
     void toggleFillForTouchLocation(CCPoint touchLocation);
     
-    
+    void setSquareSide(int i){m_squareSide = i;}
     const int getSquaresCountVertical() {return m_squaresCount_vertical;}
     const int getSquaresCountHorizontal() {return m_squaresCount_horizontal;}
     const int getSquaresCountTotal() {return m_squaresCount_total;}

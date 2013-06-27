@@ -281,7 +281,9 @@ void WyrezMap::toggleFillForTouchLocation(CCPoint touchLocation)
 {
     CCPoint squareLocation = ccp(floor(touchLocation.x/m_squareSide), floor(touchLocation.y/m_squareSide));
     int index = squareLocation.x * m_squaresCount_horizontal + squareLocation.y;
+    
     Square* pSquare = m_pSquares_all->at(index);
+    
     if (pSquare->m_fillState == kSquareFillStateEmpty) {
         pSquare->m_fillState = kSquareFillStateFilled;
         m_pSquares_filled->insert(std::make_pair(pSquare->m_index, pSquare));
