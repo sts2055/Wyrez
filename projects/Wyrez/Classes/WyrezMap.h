@@ -54,6 +54,7 @@ public:
     void toggleFillForTouchLocation(CCPoint touchLocation);
     
     void setSquareSide(int i){m_squareSide = i;}
+    const int getSquareSide(){return m_squareSide;}
     const int getSquaresCountVertical() {return m_squaresCount_vertical;}
     const int getSquaresCountHorizontal() {return m_squaresCount_horizontal;}
     const int getSquaresCountTotal() {return m_squaresCount_total;}
@@ -70,9 +71,7 @@ public:
     
     
     typedef unsigned long long timestamp_t;
-    static timestamp_t
-    get_timestamp ()
-    {
+    static timestamp_t get_timestamp () {
         struct timeval now;
         gettimeofday (&now, NULL);
         return  now.tv_usec + (timestamp_t)now.tv_sec * 1000000;

@@ -290,6 +290,7 @@ void WyrezMap::toggleFillForTouchLocation(CCPoint touchLocation)
     }
     else {
         pSquare->m_fillState = kSquareFillStateEmpty;
+        pSquare->m_chargeState = kSquareChargeStateNoCharge;
         std::map<int, Square*>::iterator itr = m_pSquares_filled->find(pSquare->m_index);
         m_pSquares_filled->erase(itr);
     }

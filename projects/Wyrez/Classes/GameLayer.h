@@ -31,8 +31,11 @@ return sprite; \
 }
 
 #define kDefaultScale 1
-
+static const float kGameLogicIntervalMax = 0.05;
+static const float kGameLogicIntervalMin = 0.85;
+static const float kGameLogicIntervalEpsilon = 0.01;
 static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
+
 
 
 class GameScene;
@@ -68,12 +71,24 @@ public:
 /**********************************************
  * header of GameHud
  **********************************************/
+typedef enum {
+    kSqDtlOrient_right_top,
+    kSqDtlOrient_right_bottom,
+    kSqDtlOrient_left_top,
+    kSqDtlOrient_left_bottom
+} SqDtlOrientTypes;
+
+typedef enum {
+    kButtonPlay
+} ButtonTypes;
+
 class GameHud : public CCLayer, public BrushMenuItemSpriteDelegate
 {
 private:
     GameScene& m_rParentScene;
     WyrezMap& m_rWyrezMap;
-    CCMenu* m_active_menu;
+    CCMenu* m_pActive_menu_primary;
+    CCMenu* m_pActive_menu_secondary;
     
 private:
     explicit GameHud(GameScene& parent, WyrezMap& rWyrezMap);
@@ -81,17 +96,25 @@ private:
     virtual bool init();
     
     CCSprite* createCustomSprite(std::string name, ccColor3B color);
-    CCMenuItemSprite* createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selector);
-    void loadMenu_displayMode();
-    void loadMenu_buildMode();
-    void doNothing() {}; // used for brush mode
     
+    template<class T = CCMenuItemSprite>
+    T* createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selector);
+    
+    void loadMenuPrimary_displayMode();
+    void loadMenuPrimary_buildMode();
+    
+    void togglePlayPause();
+    void decelerate();
+    void accelerate();
+    void doNothing() {}; // used for brush mode
     virtual void brushMenuItemSpriteIsSelected();
     virtual void brushMenuItemSpriteIsUnselected();
     
 public:
     virtual ~GameHud();
     static GameHud* createWithParentScene(GameScene& rParentScene, WyrezMap& rWyrezMap);
+    
+    void loadMenuSecondary_squareDetail(Square& rSquare, CCPoint worldLocation);
 };
 
 
@@ -107,9 +130,14 @@ private:
     bool m_wasZooming;
     bool m_brushModeActive;
     Square* m_brushModeCurrentSquare;
+    timeval m_touchTime;
+    CCPoint m_touchLocationCurrent;
+    bool m_wasManipulatingSquare;
     
 private:
     GameLayer() = delete;
+    void touchDurationListener();
+    void manipulateSquare(Square& rSquare);
     
 public:
     explicit GameLayer(GameScene& rParent, WyrezMap& rWyrezMap);
@@ -126,6 +154,12 @@ public:
     
     void setWasZooming(bool b) {m_wasZooming = b;}
     void setBrushModeActive(bool b) {m_brushModeActive = b;}
+    
+    static timeval get_timestamp () {
+        struct timeval now;
+        gettimeofday (&now, NULL);
+        return  now;
+    }
 };
 
 
@@ -174,6 +208,7 @@ private:
     GameScrollView* m_pScrollView;
     GameDrawNode* m_pDraw;
     GameHud* m_pGameHud;
+    float m_gameLogicInterval;
     
 public:
     CCPoint m_visibleOrigin;
@@ -183,20 +218,29 @@ private:
     GameScene();
     virtual ~GameScene();
     virtual bool init();
+    bool isAlmostEqual(float x, float y);
     void gameLogic();
     void handleCharges();
+    
+    
     
 public: // functions
     CREATE_QUICK_SPRITE_FUNCTION;
     CREATE_FUNC(GameScene);
-    static GameScene* scene();
+    static GameScene* scene() { return GameScene::create(); }
     
     void redrawDrawNode();
     void disableScrolling();
     void enableScrolling();
+    void openSquareDetailMenu(Square& rSquare, CCPoint worldLocation);
+    void decelerateGameLogic();
+    void accelerateGameLogic();
     virtual void scrollViewDidScroll(CCScrollView* pView);
     virtual void scrollViewDidZoom(CCScrollView* pView);
-    const GameLayer& getGameLayer() const {return *m_pGameLayer;}
+    
+    void pause() { this->pauseSchedulerAndActions(); };
+    void unpause() { this->resumeSchedulerAndActions(); }
+    bool isPaused() { return this->getScheduler()->isTargetPaused(this); }
 };
 
 

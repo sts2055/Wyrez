@@ -136,7 +136,8 @@ void GameScrollView::ccTouchMoved(CCTouch* touch, CCEvent* event)
 GameHud::GameHud(GameScene& rParentScene, WyrezMap& rWyrezMap)
 : m_rParentScene(rParentScene)
 , m_rWyrezMap(rWyrezMap)
-, m_active_menu(nullptr)
+, m_pActive_menu_primary(nullptr)
+, m_pActive_menu_secondary(nullptr)
 {
 }
 
@@ -152,7 +153,7 @@ bool GameHud::init()
         return false;
     }
     
-    this->loadMenu_displayMode();
+    this->loadMenuPrimary_displayMode();
     
     return true;
 }
@@ -182,7 +183,8 @@ CCSprite* GameHud::createCustomSprite(std::string name, ccColor3B color)
     return sprite;
 }
 
-CCMenuItemSprite* GameHud::createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selector)
+template<class T>
+T* GameHud::createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selector)
 {
     CCSprite* pNormalSprite = this->createCustomSprite(std::string("build_menu_button_frame.png"), m_rWyrezMap.getSquareChargedColor());
     CCSprite* pNormalSprite_icon = this->createCustomSprite(icon, m_rWyrezMap.getSquareDischargingColor());
@@ -192,21 +194,21 @@ CCMenuItemSprite* GameHud::createMenuItemSpriteWithIcon(std::string icon, SEL_Me
     CCSprite* pSelectedSprite = this->createCustomSprite(std::string("build_menu_button_frame.png"), m_rWyrezMap.getSquareChargedColor());
     
     
-    CCMenuItemSprite *pRet = new CCMenuItemSprite();
+    T* pRet = new T();
     pRet->initWithNormalSprite(pNormalSprite, pSelectedSprite, nullptr, this, selector);
     pRet->autorelease();
     
     return pRet;
 }
 
-void GameHud::loadMenu_displayMode()
+void GameHud::loadMenuPrimary_displayMode()
 {
-    if (m_active_menu != nullptr){
-        m_active_menu->removeFromParent();
+    if (m_pActive_menu_primary != nullptr){
+        m_pActive_menu_primary->removeFromParent();
     }
 
     CCMenuItemSprite* button_build = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_wrenchscrewdriver.png"),
-                                                                        menu_selector(GameHud::loadMenu_buildMode));
+                                                                        menu_selector(GameHud::loadMenuPrimary_buildMode));
     int margin = m_rParentScene.m_visibleSize.width * 0.01;
     button_build->setPosition(ccp(m_rParentScene.m_visibleSize.width - button_build->getNormalImage()->getContentSize().width/2 - margin,
                                   m_rParentScene.m_visibleSize.height - button_build->getNormalImage()->getContentSize().height/2 - margin));
@@ -218,59 +220,108 @@ void GameHud::loadMenu_displayMode()
     pMenu->setAnchorPoint(CCPointZero);
     pMenu->setPosition(CCPointZero);
     this->addChild(pMenu);
-    m_active_menu = pMenu;
+    m_pActive_menu_primary = pMenu;
 }
 
-void GameHud::loadMenu_buildMode()
+void GameHud::loadMenuPrimary_buildMode()
 {
-    if (m_active_menu != nullptr){
-        m_active_menu->removeFromParent();
+    if (m_pActive_menu_primary != nullptr){
+        m_pActive_menu_primary->removeFromParent();
     }
     
     CCMenuItemSprite* button_build = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_wrenchscrewdriver.png"),
-                                                                        menu_selector(GameHud::loadMenu_displayMode));
+                                                                        menu_selector(GameHud::loadMenuPrimary_displayMode));
     int margin = m_rParentScene.m_visibleSize.width * 0.01;
     button_build->setPosition(ccp(m_rParentScene.m_visibleSize.width - button_build->getNormalImage()->getContentSize().width/2 - margin,
                                   m_rParentScene.m_visibleSize.height - button_build->getNormalImage()->getContentSize().height/2 - margin));
     
     CCMenuItemSprite* button_info = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_info.png"),
-                                                                        menu_selector(GameHud::loadMenu_displayMode));
+                                                                        menu_selector(GameHud::loadMenuPrimary_displayMode));
     button_info->setPosition(ccp(button_build->getPosition().x - button_info->getNormalImage()->getContentSize().width - margin,
                                   button_build->getPosition().y));
     
+    CCMenuItemSprite* button_settings = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_cogwheels.png"),
+                                                                       menu_selector(GameHud::loadMenuPrimary_displayMode));
+    button_settings->setPosition(ccp(button_build->getPosition().x - button_settings->getNormalImage()->getContentSize().width*2 - margin*2,
+                                 button_build->getPosition().y));
+    
+    CCMenuItemSprite* button_play = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_pause.png"),
+                                                                       menu_selector(GameHud::togglePlayPause));
+    button_play->setPosition(ccp(m_rParentScene.m_visibleSize.width/2, button_build->getPosition().y));
+    button_play->setTag(kButtonPlay);
+    
+    CCMenuItemSprite* button_slower = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_rewind.png"),
+                                                                       menu_selector(GameHud::decelerate));
+    button_slower->setPosition(ccp(button_play->getPosition().x - button_slower->getNormalImage()->getContentSize().width - margin,
+                                 button_build->getPosition().y));
+    
+    CCMenuItemSprite* button_faster = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_forward.png"),
+                                                                         menu_selector(GameHud::accelerate));
+    button_faster->setPosition(ccp(button_play->getPosition().x + button_faster->getNormalImage()->getContentSize().width + margin,
+                                   button_build->getPosition().y));
+    
+    CCMenuItemSprite* button_exit = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_door.png"),
+                                                         menu_selector(GameHud::loadMenuPrimary_displayMode));
+    button_exit->setPosition(ccp(0 + button_exit->getNormalImage()->getContentSize().width/2 + margin,
+                                   button_build->getPosition().y));
     
     
-    CCSprite* pNormalSprite = this->createCustomSprite(std::string("build_menu_button_frame.png"), m_rWyrezMap.getSquareChargedColor());
-    CCSprite* pNormalSprite_icon = this->createCustomSprite(std::string("build_menu_icon_brush.png"), m_rWyrezMap.getSquareDischargingColor());
-    pNormalSprite_icon->setPosition(ccp(pNormalSprite->getContentSize().width/2, pNormalSprite->getContentSize().height/2));
-    pNormalSprite->addChild(pNormalSprite_icon);
     
-    CCSprite* pSelectedSprite = this->createCustomSprite(std::string("build_menu_button_frame.png"), m_rWyrezMap.getSquareChargedColor());
-    
-    
-    BrushMenuItemSprite *brush = new BrushMenuItemSprite();
-    brush->initWithNormalSprite(pNormalSprite, pSelectedSprite, nullptr, this, menu_selector(GameHud::doNothing));
-    brush->setDelegate(this);
-    brush->autorelease();
-    brush->setPosition(ccp(0 + brush->getNormalImage()->getContentSize().width/2 + margin,
-                                     m_rParentScene.m_visibleSize.height * 0.5 + brush->getNormalImage()->getContentSize().height/2));
-    
-    
-    CCMenuItemSprite* button_freedraw = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_brush.png"),
+    BrushMenuItemSprite* button_freedraw = this->createMenuItemSpriteWithIcon<BrushMenuItemSprite>(std::string("build_menu_icon_brush.png"),
                                                                            menu_selector(GameHud::doNothing));
     button_freedraw->setPosition(ccp(0 + button_freedraw->getNormalImage()->getContentSize().width/2 + margin,
                                   m_rParentScene.m_visibleSize.height * 0.5 + button_freedraw->getNormalImage()->getContentSize().height/2));
+    button_freedraw->setDelegate(this);
     
-    CCArray* pMenuItems = CCArray::createWithCapacity(1);
+    CCArray* pMenuItems = CCArray::createWithCapacity(8);
     pMenuItems->addObject(button_build);
     pMenuItems->addObject(button_info);
-    pMenuItems->addObject(brush);
+    pMenuItems->addObject(button_settings);
+    pMenuItems->addObject(button_play);
+    pMenuItems->addObject(button_slower);
+    pMenuItems->addObject(button_faster);
+    
+    pMenuItems->addObject(button_exit);
+    pMenuItems->addObject(button_freedraw);
     
     CCMenu* pMenu = CCMenu::createWithArray(pMenuItems);
     pMenu->setAnchorPoint(CCPointZero);
     pMenu->setPosition(CCPointZero);
     this->addChild(pMenu);
-    m_active_menu = pMenu;
+    m_pActive_menu_primary = pMenu;
+}
+
+void GameHud::loadMenuSecondary_squareDetail(Square& rSquare, CCPoint worldLocation)
+{
+    if (m_pActive_menu_secondary != nullptr){
+        m_pActive_menu_secondary->removeFromParent();
+    }
+    
+    CCSize menuSize = CCSizeMake(100, 500); // TEMP
+    
+    SqDtlOrientTypes orientation = kSqDtlOrient_right_top;
+    if (worldLocation.x > m_rParentScene.m_visibleSize.width - menuSize.width) {
+        if (worldLocation.y > m_rParentScene.m_visibleSize.height - menuSize.height) {
+            orientation = kSqDtlOrient_left_bottom;
+        }
+        else {
+            orientation = kSqDtlOrient_left_top;
+        }
+    }
+    else {
+        if (worldLocation.y > m_rParentScene.m_visibleSize.height - menuSize.height) {
+            orientation = kSqDtlOrient_right_bottom;
+        }
+        // else the value used when initializing orientation
+    }
+    
+    CCArray* pMenuItems = CCArray::createWithCapacity(1);
+    
+    CCMenu* pMenu = CCMenu::createWithArray(pMenuItems);
+    pMenu->setAnchorPoint(CCPointZero);
+    pMenu->setPosition(CCPointZero);
+    this->addChild(pMenu);
+    m_pActive_menu_secondary = pMenu;
 }
 
 void GameHud::brushMenuItemSpriteIsSelected()
@@ -278,14 +329,48 @@ void GameHud::brushMenuItemSpriteIsSelected()
     m_rParentScene.disableScrolling();
 }
 
-void GameHud::brushMenuItemSpriteIsUnselected() // TODO might not need this one
+void GameHud::brushMenuItemSpriteIsUnselected()
 {
     m_rParentScene.enableScrolling();
 }
 
+void GameHud::togglePlayPause()
+{
+    if (m_rParentScene.isPaused()) {
+        m_rParentScene.unpause();
+        auto menuItemSprite = dynamic_cast<CCMenuItemSprite*>(m_pActive_menu_primary->getChildByTag(kButtonPlay));
+        if (menuItemSprite != nullptr) {
+            CCSprite* pNormalSprite = static_cast<CCSprite*>(menuItemSprite->getNormalImage());
+            pNormalSprite->removeAllChildren();
+            
+            CCSprite* pNormalSprite_icon = this->createCustomSprite("build_menu_icon_pause.png", m_rWyrezMap.getSquareDischargingColor());
+            pNormalSprite_icon->setPosition(ccp(pNormalSprite->getContentSize().width/2, pNormalSprite->getContentSize().height/2));
+            pNormalSprite->addChild(pNormalSprite_icon);
+        }
+    }
+    else {
+        m_rParentScene.pause();
+        auto menuItemSprite = dynamic_cast<CCMenuItemSprite*>(m_pActive_menu_primary->getChildByTag(kButtonPlay));
+        if (menuItemSprite != nullptr) {
+            CCSprite* pNormalSprite = static_cast<CCSprite*>(menuItemSprite->getNormalImage());
+            pNormalSprite->removeAllChildren();
+            
+            CCSprite* pNormalSprite_icon = this->createCustomSprite("build_menu_icon_play.png", m_rWyrezMap.getSquareDischargingColor());
+            pNormalSprite_icon->setPosition(ccp(pNormalSprite->getContentSize().width/2, pNormalSprite->getContentSize().height/2));
+            pNormalSprite->addChild(pNormalSprite_icon);
+        }
+    }
+}
 
+void GameHud::decelerate()
+{
+    m_rParentScene.decelerateGameLogic();
+}
 
-
+void GameHud::accelerate()
+{
+    m_rParentScene.accelerateGameLogic();
+}
 
 
 /*****************************************************************************************
@@ -298,6 +383,9 @@ GameLayer::GameLayer(GameScene& rParent, WyrezMap& rWyrezMap)
 , m_wasZooming(false)
 , m_brushModeActive(false)
 , m_brushModeCurrentSquare(nullptr)
+, m_touchTime({0,0})
+, m_touchLocationCurrent(CCPointZero)
+, m_wasManipulatingSquare(false)
 {
 }
 
@@ -314,9 +402,57 @@ bool GameLayer::init()
     }
     
     this->setTouchEnabled(true);
-    
+    this->schedule(schedule_selector(GameLayer::touchDurationListener), 1.f);
     
     return true;
+}
+
+void GameLayer::touchDurationListener()
+{
+    if (m_touchTime.tv_sec == 0
+        || m_brushModeActive
+        || m_wasScrolling
+        || m_wasZooming) {
+        return;
+    }
+    
+    int elapsedTime = this->get_timestamp().tv_sec - m_touchTime.tv_sec;
+    
+    if (elapsedTime >= 2) {
+        m_touchTime = {0,0};
+        CCPoint squareLocation = ccp(floor(m_touchLocationCurrent.x/m_rWyrezMap.getSquareSide()),
+                                     floor(m_touchLocationCurrent.y/m_rWyrezMap.getSquareSide()));
+        int index = squareLocation.x * m_rWyrezMap.getSquaresCountHorizontal() + squareLocation.y;
+        Square& rSquare = *m_rWyrezMap.m_pSquares_all->at(index);
+        
+        // If the square is filled, we simply switch between the charge states
+        if (rSquare.m_fillState == kSquareFillStateFilled) {
+            this->manipulateSquare(rSquare);
+        }
+        // Else we open the detail menu for that square
+        else {
+            CCPoint worldLocation = this->convertToWorldSpace(m_touchLocationCurrent);
+            m_rParentScene.openSquareDetailMenu(rSquare, worldLocation);
+        }
+    }
+}
+
+void GameLayer::manipulateSquare(Square& rSquare)
+{
+    m_wasManipulatingSquare = true;
+    
+    switch (rSquare.m_chargeState) {
+        case kSquareChargeStateNoCharge:
+            rSquare.m_chargeState = kSquareChargeStateCharged;
+            break;
+        case kSquareChargeStateCharged:
+            rSquare.m_chargeState = kSquareChargeStateDischarging;
+            break;
+        case kSquareChargeStateDischarging:
+            rSquare.m_chargeState = kSquareChargeStateNoCharge;
+            break;
+    }
+    m_rParentScene.redrawDrawNode();
 }
 
 void GameLayer::registerWithTouchDispatcher()
@@ -326,6 +462,8 @@ void GameLayer::registerWithTouchDispatcher()
 
 bool GameLayer::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
 {
+    m_touchTime = this->get_timestamp();
+    m_touchLocationCurrent = this->convertTouchToNodeSpace(pTouch);
     return true;
 }
 
@@ -357,18 +495,29 @@ void GameLayer::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
         return;
     }
     // Do not toggle fill when zooming
-    if (m_wasZooming) {
+    else if (m_wasZooming) {
         m_wasZooming = false;
         return;
     }
+    // Do not toggle fill after manipulating square
+    else if (m_wasManipulatingSquare) {
+        m_wasManipulatingSquare = false;
+        return;
+    }
+    
+    m_touchTime = {0,0};
     
     CCPoint touchLocation = this->convertTouchToNodeSpace(pTouch);
     m_rWyrezMap.toggleFillForTouchLocation(touchLocation);
+    m_rParentScene.redrawDrawNode();
 }
 
 void GameLayer::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
 {
     std::cout << "ccTouchCancelled:\n";
+    m_touchTime = {0,0};
+    m_wasScrolling = false;
+    m_wasZooming = false;
 }
 
 GameLayer* GameLayer::createWithSceneAndMap(GameScene& rParentScene,
@@ -578,6 +727,7 @@ GameScene::GameScene()
 , m_pGameLayer(nullptr)
 , m_pScrollView(nullptr)
 , m_pDraw(nullptr)
+, m_gameLogicInterval(0)
 {
     
 }
@@ -602,7 +752,8 @@ bool GameScene::init()
     m_pWyrezMap = new WyrezMap();
     m_pWyrezMap->init();
     
-    CCSprite *background = createQuickSprite(CCSizeMake(m_visibleSize.width, m_visibleSize.height), m_pWyrezMap->getBackgroundColor());
+    CCSprite *background = createQuickSprite(CCSizeMake(m_visibleSize.width, m_visibleSize.height),
+                                             m_pWyrezMap->getBackgroundColor());
     background->setAnchorPoint(CCPointZero);
     background->setPosition(CCPointZero);
     
@@ -632,15 +783,31 @@ bool GameScene::init()
     this->addChild(m_pDraw);
     this->addChild(m_pGameHud);
     
-    
-    this->schedule(schedule_selector(GameScene::gameLogic), 0.05);
+    m_gameLogicInterval = kGameLogicIntervalMax;
+    this->schedule(schedule_selector(GameScene::gameLogic), m_gameLogicInterval);
 
     return true;
 }
 
-GameScene* GameScene::scene()
+void GameScene::decelerateGameLogic()
 {
-    return GameScene::create();
+    if (fabsf(m_gameLogicInterval - kGameLogicIntervalMin) <= kGameLogicIntervalEpsilon) {
+        return;
+    }
+    this->unschedule(schedule_selector(GameScene::gameLogic));
+    m_gameLogicInterval += 0.1;
+    this->schedule(schedule_selector(GameScene::gameLogic), m_gameLogicInterval);
+}
+
+void GameScene::accelerateGameLogic()
+{
+    if (fabsf(m_gameLogicInterval - kGameLogicIntervalMax) <= kGameLogicIntervalEpsilon) {
+        return;
+    }
+    
+    this->unschedule(schedule_selector(GameScene::gameLogic));
+    m_gameLogicInterval -= 0.1;
+    this->schedule(schedule_selector(GameScene::gameLogic), m_gameLogicInterval);
 }
 
 void GameScene::gameLogic()
@@ -719,6 +886,11 @@ void GameScene::enableScrolling()
 void GameScene::redrawDrawNode()
 {
     m_pDraw->redraw(m_pScrollView);
+}
+
+void GameScene::openSquareDetailMenu(Square& rSquare, CCPoint worldLocation)
+{
+    m_pGameHud->loadMenuSecondary_squareDetail(rSquare, worldLocation);
 }
 
 void GameScene::scrollViewDidScroll(CCScrollView* view)
