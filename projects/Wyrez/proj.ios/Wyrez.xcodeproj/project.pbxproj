@@ -30,6 +30,7 @@
 		D4EF94EE15BD319D00D803EB /* Icon-144.png in Resources */ = {isa = PBXBuildFile; fileRef = D4EF94ED15BD319D00D803EB /* Icon-144.png */; };
 		F80122731778CF9600A101B1 /* WyrezMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F80122711778CF9500A101B1 /* WyrezMap.cpp */; };
 		F801227A177B363B00A101B1 /* BrushMenuItemSprite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F8012278177B363A00A101B1 /* BrushMenuItemSprite.cpp */; };
+		F8012281178322E600A101B1 /* ResourceProgressTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F801227F178322E600A101B1 /* ResourceProgressTimer.cpp */; };
 		F80BD95F17748EFA0040C7B2 /* Square.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F80BD95D17748EFA0040C7B2 /* Square.cpp */; };
 		F86F4FB817734A2C00150BD0 /* libcocos2dx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F86F4FB71773497C00150BD0 /* libcocos2dx.a */; };
 		F86F4FBF17734D2500150BD0 /* GameLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F86F4FBD17734D2500150BD0 /* GameLayer.cpp */; };
@@ -80,6 +81,8 @@
 		F80122721778CF9500A101B1 /* WyrezMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WyrezMap.h; sourceTree = "<group>"; };
 		F8012278177B363A00A101B1 /* BrushMenuItemSprite.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrushMenuItemSprite.cpp; sourceTree = "<group>"; };
 		F8012279177B363B00A101B1 /* BrushMenuItemSprite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrushMenuItemSprite.h; sourceTree = "<group>"; };
+		F801227F178322E600A101B1 /* ResourceProgressTimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ResourceProgressTimer.cpp; sourceTree = "<group>"; };
+		F8012280178322E600A101B1 /* ResourceProgressTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResourceProgressTimer.h; sourceTree = "<group>"; };
 		F80BD95D17748EFA0040C7B2 /* Square.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Square.cpp; sourceTree = "<group>"; };
 		F80BD95E17748EFA0040C7B2 /* Square.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Square.h; sourceTree = "<group>"; };
 		F86F4FB21773497C00150BD0 /* cocos2dx.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = cocos2dx.xcodeproj; path = ../../../cocos2dx/proj.ios/cocos2dx.xcodeproj; sourceTree = "<group>"; };
@@ -178,6 +181,8 @@
 				F80122721778CF9500A101B1 /* WyrezMap.h */,
 				F8012278177B363A00A101B1 /* BrushMenuItemSprite.cpp */,
 				F8012279177B363B00A101B1 /* BrushMenuItemSprite.h */,
+				F801227F178322E600A101B1 /* ResourceProgressTimer.cpp */,
+				F8012280178322E600A101B1 /* ResourceProgressTimer.h */,
 			);
 			name = Classes;
 			path = ../Classes;
@@ -300,6 +305,7 @@
 				F80BD95F17748EFA0040C7B2 /* Square.cpp in Sources */,
 				F80122731778CF9600A101B1 /* WyrezMap.cpp in Sources */,
 				F801227A177B363B00A101B1 /* BrushMenuItemSprite.cpp in Sources */,
+				F8012281178322E600A101B1 /* ResourceProgressTimer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

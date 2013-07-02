@@ -23,6 +23,8 @@ WyrezMap::WyrezMap()
 , m_pGridOrigins_horizontal(nullptr)
 , m_pSquares_all(nullptr)
 , m_pSquares_filled(nullptr)
+, m_mapName("")
+, m_writeToFileRootDict(nullptr)
 {
     
 }
@@ -296,3 +298,241 @@ void WyrezMap::toggleFillForTouchLocation(CCPoint touchLocation)
     }
     
 }
+
+void WyrezMap::writeToFile(int step)
+{
+    auto addToDictFunc = [](CCDictionary* pDict, int val, std::string keyStr) -> void {
+        pDict->setObject(CCString::create(std::to_string(val)), keyStr.c_str());
+    };
+   
+    CCDictionary* root = nullptr;
+    if(m_writeToFileRootDict == nullptr) {
+        m_writeToFileRootDict = CCDictionary::create();
+        CC_SAFE_RETAIN(m_writeToFileRootDict);
+    }
+    root = m_writeToFileRootDict;
+    
+    switch (step) {
+        case 1:
+        {
+            CCString *mapName = CCString::create(m_mapName.empty() ? "default" : m_mapName);
+            root->setObject(mapName, "string element key");
+            break;
+        }
+        case 2:
+        {
+            CCDictionary *dimensionsDict = CCDictionary::create();
+            addToDictFunc(dimensionsDict, m_squareSide,                 "squareside");
+            addToDictFunc(dimensionsDict, m_squaresCount_vertical,      "squaresx"); //vertical squares
+            addToDictFunc(dimensionsDict, m_squaresCount_horizontal,    "squaresy"); //horizontal squares
+            root->setObject(dimensionsDict, "dimensions");
+            break;
+        }
+        case 3:
+        {
+            CCDictionary *colorsDict = CCDictionary::create();
+            {
+                CCDictionary *colorDict_background = CCDictionary::create();
+                addToDictFunc(colorDict_background, m_backgroundColor.r,    "r");
+                addToDictFunc(colorDict_background, m_backgroundColor.g,    "g");
+                addToDictFunc(colorDict_background, m_backgroundColor.b,    "b");
+                colorsDict->setObject(colorDict_background, "background");
+            }
+            {
+                CCDictionary *colorDict_gridLines = CCDictionary::create();
+                addToDictFunc(colorDict_gridLines, m_gridLinesColor.r,    "r");
+                addToDictFunc(colorDict_gridLines, m_gridLinesColor.g,    "g");
+                addToDictFunc(colorDict_gridLines, m_gridLinesColor.b,    "b");
+                colorsDict->setObject(colorDict_gridLines, "gridlines");
+            }
+            {
+                CCDictionary *colorDict_squareFill = CCDictionary::create();
+                addToDictFunc(colorDict_squareFill, m_squareFillColor.r,    "r");
+                addToDictFunc(colorDict_squareFill, m_squareFillColor.g,    "g");
+                addToDictFunc(colorDict_squareFill, m_squareFillColor.b,    "b");
+                colorsDict->setObject(colorDict_squareFill, "squarefill");
+            }
+            {
+                CCDictionary *colorDict_squareCharge = CCDictionary::create();
+                addToDictFunc(colorDict_squareCharge, m_squareChargedColor.r,    "r");
+                addToDictFunc(colorDict_squareCharge, m_squareChargedColor.g,    "g");
+                addToDictFunc(colorDict_squareCharge, m_squareChargedColor.b,    "b");
+                colorsDict->setObject(colorDict_squareCharge, "squarecharged");
+            }
+            {
+                CCDictionary *colorDict_squareDischar = CCDictionary::create();
+                addToDictFunc(colorDict_squareDischar, m_squareDischargingColor.r,    "r");
+                addToDictFunc(colorDict_squareDischar, m_squareDischargingColor.g,    "g");
+                addToDictFunc(colorDict_squareDischar, m_squareDischargingColor.b,    "b");
+                colorsDict->setObject(colorDict_squareDischar, "squaredischarging");
+            }
+            root->setObject(colorsDict, "colors");
+            break;
+        }
+        case 4:
+        {
+            CCArray *squaresArray = CCArray::create();
+            for (auto itr : *m_pSquares_all)
+            {
+                CCDictionary *squareDict = CCDictionary::create();
+                //addToDictFunc(squareDict, itr->m_index,         "i"); // index
+                //addToDictFunc(squareDict, itr->origin.x,        "x"); // x
+                //addToDictFunc(squareDict, itr->origin.y,        "y"); // y
+                addToDictFunc(squareDict, itr->m_fillState,     "f"); // fillstate
+                addToDictFunc(squareDict, itr->m_chargeState,   "c"); // chargestate
+                squaresArray->addObject(squareDict);
+            }
+            root->setObject(squaresArray, "squares");
+            break;
+        }
+        case 5:
+        {
+            std::string writablePath = CCFileUtils::sharedFileUtils()->getWritablePath();
+            std::string fullPath = writablePath + "default.plist";
+            
+            if(root->writeToFile(fullPath.c_str()))
+                CCLog("see the plist file at %s", fullPath.c_str());
+            else
+                CCLog("write plist file failed");
+            
+            CC_SAFE_RELEASE(m_writeToFileRootDict);
+            m_writeToFileRootDict = nullptr;
+            
+            break;
+        }
+        default:
+        {
+            CCLOGERROR("ERROR: step %i not handled", step);
+            break;
+        }
+    }
+    
+    //this->printFileAtLocation(fullPath);
+}
+
+/*void WyrezMap::writeToFile()
+ {
+ // Lambdas //
+ auto getProgress = [](uint opTot, uint& opRem) -> float {
+ opRem--;
+ return 100 - opRem/(float)opTot*100;
+ };
+ 
+ auto addToDictFunc = [](CCDictionary* pDict, int val, std::string keyStr) -> void {
+ pDict->setObject(CCString::create(std::to_string(val)), keyStr.c_str());
+ };
+ 
+ 
+ // Body //
+ bool hasDelegate = (m_pDelegate != nullptr);
+ 
+ uint operations_total = (uint)(8 + m_pSquares_all->size());
+ uint opRem = operations_total;
+ uint* pOperations_remaining = &opRem;
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(100 - *pOperations_remaining/(float)operations_total*100);
+ }
+ 
+ std::string writablePath = CCFileUtils::sharedFileUtils()->getWritablePath();
+ std::string fullPath = writablePath + "default.plist";
+ 
+ CCDictionary *root = CCDictionary::create();
+ 
+ CCString *mapName = CCString::create(m_mapName.empty() ? "default" : m_mapName);
+ root->setObject(mapName, "string element key");
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ 
+ CCDictionary *dimensionsDict = CCDictionary::create();
+ addToDictFunc(dimensionsDict, m_squareSide,                 "squareside");
+ addToDictFunc(dimensionsDict, m_squaresCount_vertical,      "squaresx"); //vertical squares
+ addToDictFunc(dimensionsDict, m_squaresCount_horizontal,    "squaresy"); //horizontal squares
+ root->setObject(dimensionsDict, "dimensions");
+ 
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ 
+ CCDictionary *colorsDict = CCDictionary::create();
+ {
+ CCDictionary *colorDict_background = CCDictionary::create();
+ addToDictFunc(colorDict_background, m_backgroundColor.r,    "r");
+ addToDictFunc(colorDict_background, m_backgroundColor.g,    "g");
+ addToDictFunc(colorDict_background, m_backgroundColor.b,    "b");
+ colorsDict->setObject(colorDict_background, "background");
+ }
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ {
+ CCDictionary *colorDict_gridLines = CCDictionary::create();
+ addToDictFunc(colorDict_gridLines, m_gridLinesColor.r,    "r");
+ addToDictFunc(colorDict_gridLines, m_gridLinesColor.g,    "g");
+ addToDictFunc(colorDict_gridLines, m_gridLinesColor.b,    "b");
+ colorsDict->setObject(colorDict_gridLines, "gridlines");
+ }
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ {
+ CCDictionary *colorDict_squareFill = CCDictionary::create();
+ addToDictFunc(colorDict_squareFill, m_squareFillColor.r,    "r");
+ addToDictFunc(colorDict_squareFill, m_squareFillColor.g,    "g");
+ addToDictFunc(colorDict_squareFill, m_squareFillColor.b,    "b");
+ colorsDict->setObject(colorDict_squareFill, "squarefill");
+ }
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ {
+ CCDictionary *colorDict_squareCharge = CCDictionary::create();
+ addToDictFunc(colorDict_squareCharge, m_squareChargedColor.r,    "r");
+ addToDictFunc(colorDict_squareCharge, m_squareChargedColor.g,    "g");
+ addToDictFunc(colorDict_squareCharge, m_squareChargedColor.b,    "b");
+ colorsDict->setObject(colorDict_squareCharge, "squarecharged");
+ }
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ {
+ CCDictionary *colorDict_squareDischar = CCDictionary::create();
+ addToDictFunc(colorDict_squareDischar, m_squareDischargingColor.r,    "r");
+ addToDictFunc(colorDict_squareDischar, m_squareDischargingColor.g,    "g");
+ addToDictFunc(colorDict_squareDischar, m_squareDischargingColor.b,    "b");
+ colorsDict->setObject(colorDict_squareDischar, "squaredischarging");
+ }
+ root->setObject(colorsDict, "colors");
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ 
+ CCArray *squaresArray = CCArray::create();
+ for (auto itr : *m_pSquares_all)
+ {
+ CCDictionary *squareDict = CCDictionary::create();
+ //addToDictFunc(squareDict, itr->m_index,         "i"); // index
+ //addToDictFunc(squareDict, itr->origin.x,        "x"); // x
+ //addToDictFunc(squareDict, itr->origin.y,        "y"); // y
+ addToDictFunc(squareDict, itr->m_fillState,     "f"); // fillstate
+ addToDictFunc(squareDict, itr->m_chargeState,   "c"); // chargestate
+ squaresArray->addObject(squareDict);
+ 
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ }
+ root->setObject(squaresArray, "squares");
+ 
+ if(root->writeToFile(fullPath.c_str()))
+ CCLog("see the plist file at %s", fullPath.c_str());
+ else
+ CCLog("write plist file failed");
+ 
+ if (hasDelegate) {
+ m_pDelegate->updateWriteToFileProgress(getProgress(operations_total, *pOperations_remaining));
+ }
+ 
+ //this->printFileAtLocation(fullPath);
+ }*/
+

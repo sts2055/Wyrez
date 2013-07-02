@@ -14,6 +14,7 @@
 #include "Square.h"
 #include "WyrezMap.h"
 #include "BrushMenuItemSprite.h"
+#include "ResourceProgressTimer.h"
 
 USING_NS_CC;
 USING_NS_CC_EXT;
@@ -82,13 +83,16 @@ typedef enum {
     kButtonPlay
 } ButtonTypes;
 
-class GameHud : public CCLayer, public BrushMenuItemSpriteDelegate
+class GameHud : public CCLayer
+, public BrushMenuItemSpriteDelegate
+, public ResourceProgressTimerDelegate
 {
 private:
     GameScene& m_rParentScene;
     WyrezMap& m_rWyrezMap;
     CCMenu* m_pActive_menu_primary;
     CCMenu* m_pActive_menu_secondary;
+    ResourceProgressTimer* m_progressBar;
     
 private:
     explicit GameHud(GameScene& parent, WyrezMap& rWyrezMap);
@@ -104,11 +108,14 @@ private:
     void loadMenuPrimary_buildMode();
     
     void togglePlayPause();
-    void decelerate();
     void accelerate();
+    void decelerate();
+    void saveMap();
     void doNothing() {}; // used for brush mode
     virtual void brushMenuItemSpriteIsSelected();
     virtual void brushMenuItemSpriteIsUnselected();
+    virtual void updateResourceHandler(int step);
+    virtual void resourceHandlerFinished();
     
 public:
     virtual ~GameHud();

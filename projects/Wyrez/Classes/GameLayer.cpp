@@ -8,6 +8,7 @@
 
 #include "GameLayer.h"
 
+
 /*****************************************************************************************
  * implementation of GameScrollView
  *****************************************************************************************/
@@ -123,7 +124,7 @@ void GameScrollView::ccTouchMoved(CCTouch* touch, CCEvent* event)
         {
             const float len = ccpDistance(m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(0)),
                                           m_pContainer->convertTouchToNodeSpace((CCTouch*)m_pTouches->objectAtIndex(1)));
-            this->setZoomScale( floorf((this->getZoomScale()*len/m_fTouchLength) * 10 + 0.5) / 10 );
+            this->setZoomScale( floorf((this->getZoomScale() * len / m_fTouchLength) * 10 + 0.5) / 10 );
             m_bZooming = true;
         }
     }
@@ -138,6 +139,7 @@ GameHud::GameHud(GameScene& rParentScene, WyrezMap& rWyrezMap)
 , m_rWyrezMap(rWyrezMap)
 , m_pActive_menu_primary(nullptr)
 , m_pActive_menu_secondary(nullptr)
+, m_progressBar(nullptr)
 {
 }
 
@@ -265,6 +267,16 @@ void GameHud::loadMenuPrimary_buildMode()
     button_exit->setPosition(ccp(0 + button_exit->getNormalImage()->getContentSize().width/2 + margin,
                                    button_build->getPosition().y));
     
+    CCMenuItemSprite* button_save = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_save.png"),
+                                                                       menu_selector(GameHud::saveMap));
+    button_save->setPosition(ccp(button_exit->getPosition().x + button_save->getNormalImage()->getContentSize().width + margin,
+                                 button_build->getPosition().y));
+    
+    CCMenuItemSprite* button_upload = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_upload.png"),
+                                                                       menu_selector(GameHud::loadMenuPrimary_displayMode));
+    button_upload->setPosition(ccp(button_exit->getPosition().x + button_upload->getNormalImage()->getContentSize().width * 2 + margin * 2,
+                                 button_build->getPosition().y));
+    
     
     
     BrushMenuItemSprite* button_freedraw = this->createMenuItemSpriteWithIcon<BrushMenuItemSprite>(std::string("build_menu_icon_brush.png"),
@@ -277,10 +289,11 @@ void GameHud::loadMenuPrimary_buildMode()
     pMenuItems->addObject(button_build);
     pMenuItems->addObject(button_info);
     pMenuItems->addObject(button_settings);
+    pMenuItems->addObject(button_faster);
     pMenuItems->addObject(button_play);
     pMenuItems->addObject(button_slower);
-    pMenuItems->addObject(button_faster);
-    
+    pMenuItems->addObject(button_upload);
+    pMenuItems->addObject(button_save);
     pMenuItems->addObject(button_exit);
     pMenuItems->addObject(button_freedraw);
     
@@ -362,14 +375,39 @@ void GameHud::togglePlayPause()
     }
 }
 
+void GameHud::accelerate()
+{
+    m_rParentScene.accelerateGameLogic();
+}
+
 void GameHud::decelerate()
 {
     m_rParentScene.decelerateGameLogic();
 }
 
-void GameHud::accelerate()
+void GameHud::saveMap()
 {
-    m_rParentScene.accelerateGameLogic();
+    CCSprite* barSprite = this->createCustomSprite("progress_bar.png", m_rWyrezMap.getSquareDischargingColor());
+    m_progressBar = ResourceProgressTimer::create(barSprite, 5, *this);
+    if (m_progressBar != nullptr) {
+        m_progressBar->setType(kCCProgressTimerTypeBar);
+        m_progressBar->setMidpoint(ccp(0,0));
+        m_progressBar->setBarChangeRate(ccp(1, 0));
+        m_progressBar->setPosition(ccp(m_rParentScene.m_visibleSize.width/2, m_rParentScene.m_visibleSize.height/2));
+        m_progressBar->setPercentage(0.f);
+        this->addChild(m_progressBar);
+        m_progressBar->start();
+    }
+}
+
+void GameHud::updateResourceHandler(int step)
+{
+    m_rWyrezMap.writeToFile(step);
+}
+
+void GameHud::resourceHandlerFinished()
+{
+    m_progressBar->removeFromParent();
 }
 
 
