@@ -110,6 +110,7 @@ private:
     void togglePlayPause();
     void accelerate();
     void decelerate();
+    void uploadMap();
     void saveMap();
     void doNothing() {}; // used for brush mode
     virtual void brushMenuItemSpriteIsSelected();

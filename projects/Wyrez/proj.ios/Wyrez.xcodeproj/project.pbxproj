@@ -34,6 +34,9 @@
 		F80BD95F17748EFA0040C7B2 /* Square.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F80BD95D17748EFA0040C7B2 /* Square.cpp */; };
 		F86F4FB817734A2C00150BD0 /* libcocos2dx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F86F4FB71773497C00150BD0 /* libcocos2dx.a */; };
 		F86F4FBF17734D2500150BD0 /* GameLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F86F4FBD17734D2500150BD0 /* GameLayer.cpp */; };
+		F89EAE451784654E008E4121 /* BackendController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F89EAE431784654E008E4121 /* BackendController.cpp */; };
+		F89EAE4F17846BDF008E4121 /* HttpClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F89EAE4917846BDF008E4121 /* HttpClient.cpp */; };
+		F89EAE521784795C008E4121 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F89EAE511784795C008E4121 /* libcurl.a */; };
 		F89F139C177363190051474E /* CCScrollView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F89F139B177363190051474E /* CCScrollView.cpp */; };
 /* End PBXBuildFile section */
 
@@ -88,6 +91,13 @@
 		F86F4FB21773497C00150BD0 /* cocos2dx.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = cocos2dx.xcodeproj; path = ../../../cocos2dx/proj.ios/cocos2dx.xcodeproj; sourceTree = "<group>"; };
 		F86F4FBD17734D2500150BD0 /* GameLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameLayer.cpp; sourceTree = "<group>"; };
 		F86F4FBE17734D2500150BD0 /* GameLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameLayer.h; sourceTree = "<group>"; };
+		F89EAE431784654E008E4121 /* BackendController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BackendController.cpp; sourceTree = "<group>"; };
+		F89EAE441784654E008E4121 /* BackendController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackendController.h; sourceTree = "<group>"; };
+		F89EAE4917846BDF008E4121 /* HttpClient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HttpClient.cpp; sourceTree = "<group>"; };
+		F89EAE4A17846BDF008E4121 /* HttpClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpClient.h; sourceTree = "<group>"; };
+		F89EAE4B17846BDF008E4121 /* HttpRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpRequest.h; sourceTree = "<group>"; };
+		F89EAE4C17846BDF008E4121 /* HttpResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpResponse.h; sourceTree = "<group>"; };
+		F89EAE511784795C008E4121 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = ../../../cocos2dx/platform/third_party/ios/libraries/libcurl.a; sourceTree = "<group>"; };
 		F89F139B177363190051474E /* CCScrollView.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CCScrollView.cpp; path = ../../../extensions/GUI/CCScrollView/CCScrollView.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -96,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F89EAE521784795C008E4121 /* libcurl.a in Frameworks */,
 				F86F4FB817734A2C00150BD0 /* libcocos2dx.a in Frameworks */,
 				1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */,
 				1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */,
@@ -121,6 +132,7 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
+				F89EAE4817846BDF008E4121 /* network */,
 				F89F139B177363190051474E /* CCScrollView.cpp */,
 				BF23D4E2143315EB00657E08 /* Classes */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -136,6 +148,7 @@
 			children = (
 				F86F4FB21773497C00150BD0 /* cocos2dx.xcodeproj */,
 				BF492B6912891AC600A09262 /* libz.dylib */,
+				F89EAE511784795C008E4121 /* libcurl.a */,
 				BF137426128A8E4600D9F789 /* QuartzCore.framework */,
 				BF492D4B1289302400A09262 /* OpenGLES.framework */,
 				BF492C21128924A800A09262 /* libxml2.dylib */,
@@ -183,6 +196,8 @@
 				F8012279177B363B00A101B1 /* BrushMenuItemSprite.h */,
 				F801227F178322E600A101B1 /* ResourceProgressTimer.cpp */,
 				F8012280178322E600A101B1 /* ResourceProgressTimer.h */,
+				F89EAE431784654E008E4121 /* BackendController.cpp */,
+				F89EAE441784654E008E4121 /* BackendController.h */,
 			);
 			name = Classes;
 			path = ../Classes;
@@ -206,6 +221,18 @@
 				F86F4FB71773497C00150BD0 /* libcocos2dx.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F89EAE4817846BDF008E4121 /* network */ = {
+			isa = PBXGroup;
+			children = (
+				F89EAE4917846BDF008E4121 /* HttpClient.cpp */,
+				F89EAE4A17846BDF008E4121 /* HttpClient.h */,
+				F89EAE4B17846BDF008E4121 /* HttpRequest.h */,
+				F89EAE4C17846BDF008E4121 /* HttpResponse.h */,
+			);
+			name = network;
+			path = ../../../extensions/network;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -306,6 +333,8 @@
 				F80122731778CF9600A101B1 /* WyrezMap.cpp in Sources */,
 				F801227A177B363B00A101B1 /* BrushMenuItemSprite.cpp in Sources */,
 				F8012281178322E600A101B1 /* ResourceProgressTimer.cpp in Sources */,
+				F89EAE451784654E008E4121 /* BackendController.cpp in Sources */,
+				F89EAE4F17846BDF008E4121 /* HttpClient.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,11 +370,16 @@
 					"\"$(SRCROOT)/../../../cocos2dx/include\"",
 					"\"$(SRCROOT)/../../../cocos2dx\"",
 					"\"$(SRCROOT)/../../../cocos2dx/platform/ios\"",
+					"\"$(SRCROOT)/../../../cocos2dx/platform/third_party/ios\"",
 					"\"$(SRCROOT)/../../../cocos2dx/kazmath/include\"",
 					"$(SRCROOT)/../../../external/chipmunk/include/chipmunk",
 				);
 				INFOPLIST_FILE = "Wyrez-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../cocos2dx/platform/third_party/ios/libraries\"",
+				);
 				PRODUCT_NAME = Wyrez;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
@@ -380,11 +414,16 @@
 					"\"$(SRCROOT)/../../../cocos2dx/include\"",
 					"\"$(SRCROOT)/../../../cocos2dx\"",
 					"\"$(SRCROOT)/../../../cocos2dx/platform/ios\"",
+					"\"$(SRCROOT)/../../../cocos2dx/platform/third_party/ios\"",
 					"\"$(SRCROOT)/../../../cocos2dx/kazmath/include\"",
 					"$(SRCROOT)/../../../external/chipmunk/include/chipmunk",
 				);
 				INFOPLIST_FILE = "Wyrez-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../cocos2dx/platform/third_party/ios/libraries\"",
+				);
 				PRODUCT_NAME = Wyrez;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;

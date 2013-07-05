@@ -7,6 +7,7 @@
 //
 
 #include "WyrezMap.h"
+#include <fstream>
 
 WyrezMap::WyrezMap()
 : m_squareSide(0)
@@ -51,6 +52,8 @@ WyrezMap::~WyrezMap()
     }
     delete m_pSquares_all;
     delete m_pSquares_filled;
+    
+    CC_SAFE_RELEASE(m_writeToFileRootDict);
 }
 
 bool WyrezMap::init()
@@ -98,6 +101,13 @@ bool WyrezMap::init()
         }
     }
     this->setupSurroundingSquares();
+    
+    std::cout << "sizeof(Square): " << sizeof(Square) << "\n";
+    std::cout << "sizeof(Square*): " << sizeof(Square*) << "\n";
+    std::cout << "sizeof(CCPoint): " << sizeof(CCPoint) << "\n";
+    std::cout << "sizeof(CCSize): " << sizeof(CCSize) << "\n";
+    std::cout << "sizeof(float): " << sizeof(float) << "\n";
+    std::cout << "sizeof(kSquareFillStateEmpty): " << sizeof(kSquareFillStateEmpty) << "\n";
     
     // Setup the first squares TEMP
     Square* square0 = m_pSquares_all->at(1);
@@ -372,7 +382,7 @@ void WyrezMap::writeToFile(int step)
         case 4:
         {
             CCArray *squaresArray = CCArray::create();
-            for (auto itr : *m_pSquares_all)
+            /*for (auto itr : *m_pSquares_all)
             {
                 CCDictionary *squareDict = CCDictionary::create();
                 //addToDictFunc(squareDict, itr->m_index,         "i"); // index
@@ -381,7 +391,20 @@ void WyrezMap::writeToFile(int step)
                 addToDictFunc(squareDict, itr->m_fillState,     "f"); // fillstate
                 addToDictFunc(squareDict, itr->m_chargeState,   "c"); // chargestate
                 squaresArray->addObject(squareDict);
+            }*/
+            
+            for (auto iter = m_pSquares_filled->begin(); iter!=m_pSquares_filled->end(); ++iter)
+            {
+                CCDictionary *squareDict = CCDictionary::create();
+                addToDictFunc(squareDict, iter->second->m_index,         "i"); // index
+                addToDictFunc(squareDict, iter->second->origin.x,        "x"); // x
+                addToDictFunc(squareDict, iter->second->origin.y,        "y"); // y
+                //addToDictFunc(squareDict, iter->second->m_fillState,     "f"); // fillstate
+                addToDictFunc(squareDict, iter->second->m_chargeState,   "c"); // chargestate
+                squaresArray->addObject(squareDict);
             }
+            
+            
             root->setObject(squaresArray, "squares");
             break;
         }
@@ -397,7 +420,7 @@ void WyrezMap::writeToFile(int step)
             
             CC_SAFE_RELEASE(m_writeToFileRootDict);
             m_writeToFileRootDict = nullptr;
-            
+            this->printFileAtLocation(fullPath);
             break;
         }
         default:
@@ -406,9 +429,87 @@ void WyrezMap::writeToFile(int step)
             break;
         }
     }
-    
-    //this->printFileAtLocation(fullPath);
 }
+
+void WyrezMap::test(int step)
+{
+    std::string writablePath = CCFileUtils::sharedFileUtils()->getWritablePath();
+    std::string fullPath = writablePath + "default.json";
+    std::ofstream file (fullPath);
+    
+    if (file.is_open()) {
+        file << "{\n";
+        file << "   \"name\":\"" << (m_mapName.empty() ? "default" : m_mapName) << "\",\n"; // map name
+        
+        file << "   \"dimensions\":{\n"
+        << "        \"sq_side\":\"" << m_squareSide << "\",\n"
+        << "        \"sq_v\":\"" << m_squaresCount_vertical << "\",\n" // vertical squares
+        << "        \"sq_h\":\"" << m_squaresCount_horizontal << "\",\n" // horizontal squares
+        << "    },\n";
+        
+        file << "   \"colors\":{\n"
+        << "        \"bg\":{\n" // background
+        << "            \"r\":\"" << (int)m_backgroundColor.r << "\",\n" // red
+        << "            \"g\":\"" << (int)m_backgroundColor.g << "\",\n" // green
+        << "            \"b\":\"" << (int)m_backgroundColor.b << "\"\n" // blue
+        << "        },\n"
+        << "        \"gl\":{\n" // gridlines
+        << "            \"r\":\"" << (int)m_gridLinesColor.r << "\",\n" // red
+        << "            \"g\":\"" << (int)m_gridLinesColor.g << "\",\n" // green
+        << "            \"b\":\"" << (int)m_gridLinesColor.b << "\"\n" // blue
+        << "        },\n"
+        << "        \"sqf\":{\n" // squarefill
+        << "            \"r\":\"" << (int)m_squareFillColor.r << "\",\n" // red
+        << "            \"g\":\"" << (int)m_squareFillColor.g << "\",\n" // green
+        << "            \"b\":\"" << (int)m_squareFillColor.b << "\"\n" // blue
+        << "        },\n"
+        << "        \"sqc\":{\n" // squarecharge
+        << "            \"r\":\"" << (int)m_squareChargedColor.r << "\",\n" // red
+        << "            \"g\":\"" << (int)m_squareChargedColor.g << "\",\n" // green
+        << "            \"b\":\"" << (int)m_squareChargedColor.b << "\"\n" // blue
+        << "        },\n"
+        << "        \"sqd\":{\n" // squaredischarge
+        << "            \"r\":\"" << (int)m_squareDischargingColor.r << "\",\n" // red
+        << "            \"g\":\"" << (int)m_squareDischargingColor.g << "\",\n" // green
+        << "            \"b\":\"" << (int)m_squareDischargingColor.b << "\"\n" // blue
+        << "        }\n"
+        << "    },\n";
+        
+        file << "   \"squares\":[\n";
+        bool firstCommaIgnored = false;
+        for (auto itr : *m_pSquares_all)
+        {
+            if (firstCommaIgnored)
+                file << ",\n";
+            else
+                firstCommaIgnored = true;
+            
+            file << "       {\n"
+            << "            \"i\":\"" << itr->m_index << "\",\n" // index
+            << "            \"f\":\"" << itr->m_fillState << "\",\n" // fillstate
+            << "            \"c\":\"" << itr->m_chargeState << "\"\n" // chargestate
+            << "        }"<< std::flush;
+        }
+        file << "\n";
+        file << "   ]\n";
+        file << "}\n";
+        file.close();
+    }
+    else {
+        std::cout << "Unable to open file\n";
+    }
+    
+    FILE *p_file = NULL;
+    p_file = fopen(fullPath.c_str(),"rb");
+    fseek(p_file,0,SEEK_END);
+    int size = ftell(p_file);
+    fclose(p_file);
+    std::cout << "file size: " << size << "\n";
+    
+    this->printFileAtLocation(fullPath);
+}
+
+
 
 /*void WyrezMap::writeToFile()
  {

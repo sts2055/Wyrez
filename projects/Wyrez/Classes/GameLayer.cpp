@@ -7,6 +7,7 @@
 //
 
 #include "GameLayer.h"
+#include "BackendController.h"
 
 
 /*****************************************************************************************
@@ -273,7 +274,7 @@ void GameHud::loadMenuPrimary_buildMode()
                                  button_build->getPosition().y));
     
     CCMenuItemSprite* button_upload = this->createMenuItemSpriteWithIcon(std::string("build_menu_icon_upload.png"),
-                                                                       menu_selector(GameHud::loadMenuPrimary_displayMode));
+                                                                       menu_selector(GameHud::uploadMap));
     button_upload->setPosition(ccp(button_exit->getPosition().x + button_upload->getNormalImage()->getContentSize().width * 2 + margin * 2,
                                  button_build->getPosition().y));
     
@@ -383,6 +384,14 @@ void GameHud::accelerate()
 void GameHud::decelerate()
 {
     m_rParentScene.decelerateGameLogic();
+}
+
+void GameHud::uploadMap()
+{
+    BackendController* backend = BackendController::getInstance();
+    //backend->test();
+    
+    m_rWyrezMap.test(1);
 }
 
 void GameHud::saveMap()

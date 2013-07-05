@@ -15,8 +15,8 @@
 USING_NS_CC;
 
 #define kSquareSide 50
-#define kDefaultSquaresVertical 1000
-#define kDefaultSquaresHorizontal 1000
+#define kDefaultSquaresVertical 100
+#define kDefaultSquaresHorizontal 100
 
 static const ccColor3B kDEFAULT_COLOR_BACKGROUND    = {63,  63, 63}; // dark gray
 static const ccColor3B kDEFAULT_COLOR_GRIDLINES     = {99,  99, 99}; // lighter gray
@@ -48,7 +48,8 @@ public:
     std::vector<CCPoint*> * m_pGridOrigins_vertical;
     std::vector<CCPoint*> * m_pGridOrigins_horizontal;
     std::vector<Square*> * m_pSquares_all;
-    std::map<int, Square*> * m_pSquares_filled; // square's index as key
+    // square's index as key, holds pointers to Squares that will be deleted by m_pSquares_all
+    std::map<int, Square*> * m_pSquares_filled; 
     
 public:
     WyrezMap();
@@ -93,6 +94,9 @@ public:
         }
     }
     
+    void test(int step);
+    
 };
+
 
 #endif /* defined(__Wyrez__WyrezMap__) */
