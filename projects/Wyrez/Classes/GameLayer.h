@@ -19,26 +19,6 @@
 USING_NS_CC;
 USING_NS_CC_EXT;
 
-
-#define CREATE_QUICK_SPRITE_FUNCTION \
-static CCSprite* createQuickSprite(CCSize size, ccColor3B color) \
-{ \
-CCSprite* sprite = new CCSprite(); \
-sprite->initWithFile("blank.png"); \
-sprite->setTextureRect(CCRectMake(0,0,size.width,size.height)); \
-sprite->setColor(color); \
-sprite->autorelease(); \
-return sprite; \
-}
-
-#define kDefaultScale 1
-static const float kGameLogicIntervalMax = 0.05;
-static const float kGameLogicIntervalMin = 0.85;
-static const float kGameLogicIntervalEpsilon = 0.01;
-static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
-
-
-
 class GameScene;
 class GameLayer;
 
@@ -55,15 +35,12 @@ private:
     
 public:
     virtual ~GameScrollView();
-    
-    
-    void setFMaxScale(float f) { m_fMaxScale = f; };
-    void setFMinScale(float f) { m_fMinScale = f; };
-    
     static GameScrollView* create(CCSize size, CCNode* container = NULL);
     
     virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
     
+    void setFMaxScale(float f) { m_fMaxScale = f; };
+    void setFMinScale(float f) { m_fMinScale = f; };
     void setShouldScroll(bool b) {m_shouldScroll = b;}
 };
 
@@ -72,17 +49,6 @@ public:
 /**********************************************
  * header of GameHud
  **********************************************/
-typedef enum {
-    kSqDtlOrient_right_top,
-    kSqDtlOrient_right_bottom,
-    kSqDtlOrient_left_top,
-    kSqDtlOrient_left_bottom
-} SqDtlOrientTypes;
-
-typedef enum {
-    kButtonPlay
-} ButtonTypes;
-
 class GameHud : public CCLayer
 , public BrushMenuItemSpriteDelegate
 , public ResourceProgressTimerDelegate
@@ -233,7 +199,6 @@ private:
     
     
 public: // functions
-    CREATE_QUICK_SPRITE_FUNCTION;
     CREATE_FUNC(GameScene);
     static GameScene* scene() { return GameScene::create(); }
     

@@ -98,6 +98,7 @@
 		F89EAE4B17846BDF008E4121 /* HttpRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpRequest.h; sourceTree = "<group>"; };
 		F89EAE4C17846BDF008E4121 /* HttpResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpResponse.h; sourceTree = "<group>"; };
 		F89EAE511784795C008E4121 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = ../../../cocos2dx/platform/third_party/ios/libraries/libcurl.a; sourceTree = "<group>"; };
+		F89EAE53178845E9008E4121 /* DebuggingHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebuggingHelpers.h; sourceTree = "<group>"; };
 		F89F139B177363190051474E /* CCScrollView.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CCScrollView.cpp; path = ../../../extensions/GUI/CCScrollView/CCScrollView.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -198,6 +199,7 @@
 				F8012280178322E600A101B1 /* ResourceProgressTimer.h */,
 				F89EAE431784654E008E4121 /* BackendController.cpp */,
 				F89EAE441784654E008E4121 /* BackendController.h */,
+				F89EAE53178845E9008E4121 /* DebuggingHelpers.h */,
 			);
 			name = Classes;
 			path = ../Classes;

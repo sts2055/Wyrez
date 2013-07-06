@@ -9,6 +9,19 @@
 #include "BackendController.h"
 #include <curl/curl.h>
 
+static const std::string kHeaderXParseApplicationId = std::string("X-Parse-Application-Id: gBfOVaV4FITEJacQJuqJe2gBuenI2ZZ7i8UXMNWs");
+static const std::string kHeaderXParseRestAPIKey = std::string("X-Parse-REST-API-Key: lZ3osgub3jP769pkn8YLTfq3q3XKx8LD8xLgAh89");
+static const std::string kHeaderContentTypeJSON = std::string("Content-Type: application/json");
+
+static inline std::string urlEncode(std::string string)
+{
+    char* curlEscapedString = curl_escape( string.c_str(), string.length() );
+    std::string pURLencodedJSON = std::string(curlEscapedString);
+    curl_free(curlEscapedString);
+    
+    return pURLencodedJSON;
+}
+
 static BackendController *s_pBackendController = NULL; // pointer to singleton
 
 BackendController::BackendController()
@@ -21,42 +34,6 @@ BackendController::~BackendController()
     CCLOG("cocos2d: deallocing ~BackendController %p", this);
     CCHttpClient* httpClient = CCHttpClient::getInstance();
     httpClient->destroyInstance();
-}
-
-std::string* BackendController::urlEncodeJSON(std::string json)
-{
-    
-    char* curlEscapedString = curl_escape( json.c_str(), json.length() );
-    std::string* pURLencodedJSON = new std::string(curlEscapedString);
-    curl_free(curlEscapedString);
-    
-    return pURLencodedJSON;
-}
-
-void BackendController::test()
-{
-    /*CCHttpRequest* request = new CCHttpRequest();
-    request->setUrl("https://api.parse.com/1/functions/hello");
-    request->setRequestType(CCHttpRequest::kHttpPost);
-    std::vector<std::string> headers;
-    headers.push_back("X-Parse-Application-Id: gBfOVaV4FITEJacQJuqJe2gBuenI2ZZ7i8UXMNWs");
-    headers.push_back("X-Parse-REST-API-Key: lZ3osgub3jP769pkn8YLTfq3q3XKx8LD8xLgAh89");
-    headers.push_back("Content-Type: application/json");
-    request->setHeaders(headers);
-    request->setResponseCallback(this, httpresponse_selector(BackendController::onHttpRequestCompleted));
-    
-    // write the post data
-    const char* postData = "{}";
-    request->setRequestData(postData, strlen(postData));
-    
-    request->setTag("POST test2");
-    CCHttpClient::getInstance()->send(request);
-    request->release();*/
-    
-    std::cout << "where={\"score\":{\"$gte\":1000,\"$lte\":3000}}" << "\n";
-    std::string* urlencodedjson = this->urlEncodeJSON("where={\"score\":{\"$gte\":1000,\"$lte\":3000}}");
-    std::cout << *urlencodedjson << "\n";
-    delete urlencodedjson;
 }
 
 BackendController* BackendController::getInstance()
@@ -87,11 +64,14 @@ void BackendController::onHttpRequestCompleted(CCHttpClient *sender, CCHttpRespo
     //m_labelStatusCode->setString(statusString);
     CCLog("response code: %d", statusCode);
     
+    if (statusCode >= 200 && statusCode < 400)
+        response->setSucceed(true);
+    
     if (!response->isSucceed())
     {
         CCLog("response failed");
         CCLog("error buffer: %s", response->getErrorBuffer());
-        return;
+        //return;
     }
     
     // dump data
@@ -104,21 +84,73 @@ void BackendController::onHttpRequestCompleted(CCHttpClient *sender, CCHttpRespo
     printf("\n");
 }
 
-void BackendController::signupUser(std::string name, std::string password)
+void BackendController::signupUser(std::string name, std::string password, std::string email)
 {
     CCHttpRequest* request = new CCHttpRequest();
     request->setUrl("https://api.parse.com/1/users");
     request->setRequestType(CCHttpRequest::kHttpPost);
     std::vector<std::string> headers;
-    headers.push_back("X-Parse-Application-Id: gBfOVaV4FITEJacQJuqJe2gBuenI2ZZ7i8UXMNWs");
-    headers.push_back("X-Parse-REST-API-Key: lZ3osgub3jP769pkn8YLTfq3q3XKx8LD8xLgAh89");
-    headers.push_back("Content-Type: application/json");
+    headers.push_back(kHeaderXParseApplicationId);
+    headers.push_back(kHeaderXParseRestAPIKey);
+    headers.push_back(kHeaderContentTypeJSON);
     request->setHeaders(headers);
     request->setResponseCallback(this, httpresponse_selector(BackendController::onHttpRequestCompleted));
     
     std::ostringstream stringStream;
-    stringStream << "{\"";
+    stringStream << "{"
+    << "\"username\":\"" << name << "\","
+    << "\"password\":\"" << password << "\","
+    << "\"email\":\"" << email << "\""
+    << "}";
     std::string copyOfStr = stringStream.str();
+    std::cout << "stringStream: " << copyOfStr << "\n";
+    
+    // write the post data
+    const char* postData = copyOfStr.c_str();
+    request->setRequestData(postData, strlen(postData));
+    
+    request->setTag("POST signupUser");
+    CCHttpClient::getInstance()->send(request);
+    request->release();
+}
+
+void BackendController::loginUser(std::string name, std::string password)
+{
+    CCHttpRequest* request = new CCHttpRequest();
+    
+    std::string nameStr = urlEncode(std::string("username=" + name));
+    std::string passwordStr = urlEncode(std::string("password=" + password));
+    std::ostringstream stringStream;
+    stringStream << "https://api.parse.com/1/login?"
+    << nameStr
+    << "&"
+    << passwordStr;
+    std::string copyOfStr = stringStream.str();
+    CCLOG("%s", copyOfStr.c_str());
+    
+    request->setUrl(copyOfStr.c_str());
+    request->setRequestType(CCHttpRequest::kHttpGet);
+    std::vector<std::string> headers;
+    headers.push_back(kHeaderXParseApplicationId);
+    headers.push_back(kHeaderXParseRestAPIKey);
+    request->setHeaders(headers);
+    request->setResponseCallback(this, httpresponse_selector(BackendController::onHttpRequestCompleted));
+    CCHttpClient::getInstance()->send(request);
+    request->setTag("GET loginUser");
+    request->release();
+}
+
+void BackendController::requestPasswordReset(std::string email)
+{
+    CCHttpRequest* request = new CCHttpRequest();
+    request->setUrl("https://api.parse.com/1/functions/hello");
+    request->setRequestType(CCHttpRequest::kHttpPost);
+    std::vector<std::string> headers;
+    headers.push_back(kHeaderXParseApplicationId);
+    headers.push_back(kHeaderXParseRestAPIKey);
+    headers.push_back(kHeaderContentTypeJSON);
+    request->setHeaders(headers);
+    request->setResponseCallback(this, httpresponse_selector(BackendController::onHttpRequestCompleted));
     
     // write the post data
     const char* postData = "{}";

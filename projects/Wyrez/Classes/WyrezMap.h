@@ -14,15 +14,7 @@
 
 USING_NS_CC;
 
-#define kSquareSide 50
-#define kDefaultSquaresVertical 100
-#define kDefaultSquaresHorizontal 100
-
-static const ccColor3B kDEFAULT_COLOR_BACKGROUND    = {63,  63, 63}; // dark gray
-static const ccColor3B kDEFAULT_COLOR_GRIDLINES     = {99,  99, 99}; // lighter gray
-static const ccColor3B kDEFAULT_COLOR_FILL          = {255, 147,36}; // orange
-static const ccColor3B kDEFAULT_COLOR_CHARGED       = {13,  153,252}; // light blue
-static const ccColor3B kDEFAULT_COLOR_DISCHARGING   = {255, 255,255}; // white
+static const int kDefaultSquareSide = 50;
 
 class WyrezMap
 {
@@ -73,26 +65,6 @@ public:
     ccColor3B getSquareChargedColor() {return m_squareChargedColor;}
     ccColor3B getSquareDischargingColor() {return m_squareDischargingColor;}
     
-    // DEBUGGING
-    typedef unsigned long long timestamp_t;
-    static timestamp_t get_timestamp () {
-        struct timeval now;
-        gettimeofday (&now, NULL);
-        return  now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
-    }
-    
-    static void printFileAtLocation(std::string s) {
-        FILE *in;
-        char c;
-        in = fopen(s.c_str(), "r");
-        if(in != NULL)
-        {
-            while((c = fgetc(in)) != EOF)
-                putchar(c);
-            
-            fclose(in);
-        }
-    }
     
     void test(int step);
     

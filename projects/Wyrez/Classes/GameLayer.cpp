@@ -10,6 +10,25 @@
 #include "BackendController.h"
 
 
+
+#define kDefaultScale 1
+static const float kGameLogicIntervalMax = 0.05;
+static const float kGameLogicIntervalMin = 0.85;
+static const float kGameLogicIntervalEpsilon = 0.01;
+static const ccColor4F kCOLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
+
+
+static inline CCSprite* createQuickSprite(CCSize size, ccColor3B color)
+{
+    CCSprite* sprite = new CCSprite();
+    sprite->initWithFile("blank.png");
+    sprite->setTextureRect(CCRectMake(0,0,size.width,size.height));
+    sprite->setColor(color);
+    sprite->autorelease();
+    return sprite;
+}
+
+
 /*****************************************************************************************
  * implementation of GameScrollView
  *****************************************************************************************/
@@ -135,6 +154,17 @@ void GameScrollView::ccTouchMoved(CCTouch* touch, CCEvent* event)
 /*****************************************************************************************
  * implementation of GameHud
  *****************************************************************************************/
+typedef enum {
+    kSqDtlOrient_right_top,
+    kSqDtlOrient_right_bottom,
+    kSqDtlOrient_left_top,
+    kSqDtlOrient_left_bottom
+} SqDtlOrientTypes;
+
+typedef enum {
+    kButtonPlay
+} ButtonTypes;
+
 GameHud::GameHud(GameScene& rParentScene, WyrezMap& rWyrezMap)
 : m_rParentScene(rParentScene)
 , m_rWyrezMap(rWyrezMap)
@@ -389,14 +419,17 @@ void GameHud::decelerate()
 void GameHud::uploadMap()
 {
     BackendController* backend = BackendController::getInstance();
-    //backend->test();
+    backend->loginUser("sts2055", "1234");
     
-    m_rWyrezMap.test(1);
+    //m_rWyrezMap.test(1);
 }
 
 void GameHud::saveMap()
 {
-    CCSprite* barSprite = this->createCustomSprite("progress_bar.png", m_rWyrezMap.getSquareDischargingColor());
+    BackendController* backend = BackendController::getInstance();
+    backend->signupUser("sts2055", "1234", "sts2055@gmail.com");
+    
+    /*CCSprite* barSprite = this->createCustomSprite("progress_bar.png", m_rWyrezMap.getSquareDischargingColor());
     m_progressBar = ResourceProgressTimer::create(barSprite, 5, *this);
     if (m_progressBar != nullptr) {
         m_progressBar->setType(kCCProgressTimerTypeBar);
@@ -406,7 +439,8 @@ void GameHud::saveMap()
         m_progressBar->setPercentage(0.f);
         this->addChild(m_progressBar);
         m_progressBar->start();
-    }
+    }*/
+
 }
 
 void GameHud::updateResourceHandler(int step)
@@ -520,7 +554,7 @@ void GameLayer::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
     
     if (m_brushModeActive) {
         CCPoint touchLocation = this->convertTouchToNodeSpace(pTouch);
-        CCPoint squareLocation = ccp(floor(touchLocation.x/kSquareSide), floor(touchLocation.y/kSquareSide));
+        CCPoint squareLocation = ccp(floor(touchLocation.x/kDefaultSquareSide), floor(touchLocation.y/kDefaultSquareSide));
         int index = squareLocation.x * m_rWyrezMap.getSquaresCountHorizontal() + squareLocation.y;
         Square* pSquare = m_rWyrezMap.m_pSquares_all->at(index);
         
@@ -614,7 +648,7 @@ bool GameDrawNode::init()
         return false;
     }
     
-    m_squareSide = kSquareSide;
+    m_squareSide = kDefaultSquareSide;
     
     m_gridLinesColor = ccc4FFromccc3B(m_rWyrezMap.getGridLinesColor());
     m_squareFillColor = ccc4FFromccc3B(m_rWyrezMap.getSquareFillColor());
@@ -704,7 +738,7 @@ void GameDrawNode::redraw(CCScrollView* pView)
     
     // m_squareSide being smaller than half of kSquareSide means that the map scale is smaller than 0.5
     // at which point we don't want to display a grid at all
-    if (m_squareSide < kSquareSide/2) {
+    if (m_squareSide < kDefaultSquareSide/2) {
         return;
     }
     
@@ -728,7 +762,7 @@ void GameDrawNode::redraw(CCScrollView* pView)
 void GameDrawNode::rearrange(CCScrollView* pView)
 {
     CCNode* container = pView->getContainer();
-    m_squareSide = kSquareSide * container->getScale();
+    m_squareSide = kDefaultSquareSide * container->getScale();
     
     int i = 0;
     for (auto cIter = m_rWyrezMap.m_pGridOrigins_vertical->begin();

@@ -8,6 +8,17 @@
 
 #include "WyrezMap.h"
 #include <fstream>
+#include "DebuggingHelpers.h"
+
+static const int kDefaultSquaresVertical = 100;
+static const int kDefaultSquaresHorizontal = 100;
+
+static const ccColor3B kDEFAULT_COLOR_BACKGROUND    = {63,  63, 63}; // dark gray
+static const ccColor3B kDEFAULT_COLOR_GRIDLINES     = {99,  99, 99}; // lighter gray
+static const ccColor3B kDEFAULT_COLOR_FILL          = {255, 147,36}; // orange
+static const ccColor3B kDEFAULT_COLOR_CHARGED       = {13,  153,252}; // light blue
+static const ccColor3B kDEFAULT_COLOR_DISCHARGING   = {255, 255,255}; // white
+
 
 WyrezMap::WyrezMap()
 : m_squareSide(0)
@@ -58,7 +69,7 @@ WyrezMap::~WyrezMap()
 
 bool WyrezMap::init()
 {
-    m_squareSide = kSquareSide;
+    m_squareSide = kDefaultSquareSide;
     m_squaresCount_vertical = kDefaultSquaresVertical;
     m_squaresCount_horizontal = kDefaultSquaresHorizontal;
     m_squaresCount_total = m_squaresCount_vertical * m_squaresCount_horizontal;
@@ -69,7 +80,7 @@ bool WyrezMap::init()
     m_squareChargedColor        = kDEFAULT_COLOR_CHARGED;
     m_squareDischargingColor    = kDEFAULT_COLOR_DISCHARGING;
     
-    m_contentSize = CCSizeMake(m_squaresCount_vertical * kSquareSide, m_squaresCount_horizontal * kSquareSide);
+    m_contentSize = CCSizeMake(m_squaresCount_vertical * kDefaultSquareSide, m_squaresCount_horizontal * kDefaultSquareSide);
     
     m_pGridOrigins_vertical = new std::vector<CCPoint*>();
     m_pGridOrigins_horizontal = new std::vector<CCPoint*>();
@@ -81,12 +92,12 @@ bool WyrezMap::init()
     
     for (int i = 0; i < verticalLines; i++)
     {
-        m_pGridOrigins_vertical->push_back(new CCPoint(i * kSquareSide, 0));
+        m_pGridOrigins_vertical->push_back(new CCPoint(i * kDefaultSquareSide, 0));
     }
     
     for (int i = 0; i < horizontalLines; i++)
     {
-        m_pGridOrigins_horizontal->push_back(new CCPoint(0, i * kSquareSide));
+        m_pGridOrigins_horizontal->push_back(new CCPoint(0, i * kDefaultSquareSide));
     }
     
     // This makes the axis for vertical lines (x) the first axis when determining the index of a square inside the array
@@ -96,7 +107,11 @@ bool WyrezMap::init()
     {
         for (int j = 0; j < horizontalLines; j++)
         {
-            m_pSquares_all->push_back(new Square(index, i * kSquareSide, j * kSquareSide, kSquareSide, kSquareSide));
+            m_pSquares_all->push_back(new Square(index,
+                                                 i * kDefaultSquareSide,
+                                                 j * kDefaultSquareSide,
+                                                 kDefaultSquareSide,
+                                                 kDefaultSquareSide));
             index++;
         }
     }
@@ -420,7 +435,7 @@ void WyrezMap::writeToFile(int step)
             
             CC_SAFE_RELEASE(m_writeToFileRootDict);
             m_writeToFileRootDict = nullptr;
-            this->printFileAtLocation(fullPath);
+            printFileAtLocation(fullPath);
             break;
         }
         default:
@@ -506,7 +521,7 @@ void WyrezMap::test(int step)
     fclose(p_file);
     std::cout << "file size: " << size << "\n";
     
-    this->printFileAtLocation(fullPath);
+    printFileAtLocation(fullPath);
 }
 
 
