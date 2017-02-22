@@ -9,9 +9,9 @@
 #include "BackendController.h"
 #include <curl/curl.h>
 
-static const std::string kHeaderXParseApplicationId = std::string("X-Parse-Application-Id: gBfOVaV4FITEJacQJuqJe2gBuenI2ZZ7i8UXMNWs");
-static const std::string kHeaderXParseRestAPIKey = std::string("X-Parse-REST-API-Key: lZ3osgub3jP769pkn8YLTfq3q3XKx8LD8xLgAh89");
-static const std::string kHeaderContentTypeJSON = std::string("Content-Type: application/json");
+static const std::string kHeaderXParseApplicationId("X-Parse-Application-Id: gBfOVaV4FITEJacQJuqJe2gBuenI2ZZ7i8UXMNWs");
+static const std::string kHeaderXParseRestAPIKey("X-Parse-REST-API-Key: lZ3osgub3jP769pkn8YLTfq3q3XKx8LD8xLgAh89");
+static const std::string kHeaderContentTypeJSON("Content-Type: application/json");
 
 static inline std::string urlEncode(std::string string)
 {
@@ -102,11 +102,9 @@ void BackendController::signupUser(std::string name, std::string password, std::
     << "\"password\":\"" << password << "\","
     << "\"email\":\"" << email << "\""
     << "}";
-    std::string copyOfStr = stringStream.str();
-    std::cout << "stringStream: " << copyOfStr << "\n";
     
     // write the post data
-    const char* postData = copyOfStr.c_str();
+    const char* postData = stringStream.str().c_str();
     request->setRequestData(postData, strlen(postData));
     
     request->setTag("POST signupUser");
@@ -125,10 +123,8 @@ void BackendController::loginUser(std::string name, std::string password)
     << nameStr
     << "&"
     << passwordStr;
-    std::string copyOfStr = stringStream.str();
-    CCLOG("%s", copyOfStr.c_str());
     
-    request->setUrl(copyOfStr.c_str());
+    request->setUrl(stringStream.str().c_str());
     request->setRequestType(CCHttpRequest::kHttpGet);
     std::vector<std::string> headers;
     headers.push_back(kHeaderXParseApplicationId);
@@ -152,11 +148,15 @@ void BackendController::requestPasswordReset(std::string email)
     request->setHeaders(headers);
     request->setResponseCallback(this, httpresponse_selector(BackendController::onHttpRequestCompleted));
     
+    std::string dataString = "{\"email\":\"";
+    dataString += email;
+    dataString +="\"}";
+    
     // write the post data
-    const char* postData = "{}";
+    const char* postData = dataString.c_str();
     request->setRequestData(postData, strlen(postData));
     
-    request->setTag("POST test2");
+    request->setTag("POST requestPasswordReset");
     CCHttpClient::getInstance()->send(request);
     request->release();
 }

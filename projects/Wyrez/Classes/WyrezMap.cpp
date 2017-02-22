@@ -435,7 +435,7 @@ void WyrezMap::writeToFile(int step)
             
             CC_SAFE_RELEASE(m_writeToFileRootDict);
             m_writeToFileRootDict = nullptr;
-            printFileAtLocation(fullPath);
+            printFileContent(fullPath.c_str());
             break;
         }
         default:
@@ -514,14 +514,9 @@ void WyrezMap::test(int step)
         std::cout << "Unable to open file\n";
     }
     
-    FILE *p_file = NULL;
-    p_file = fopen(fullPath.c_str(),"rb");
-    fseek(p_file,0,SEEK_END);
-    int size = ftell(p_file);
-    fclose(p_file);
-    std::cout << "file size: " << size << "\n";
     
-    printFileAtLocation(fullPath);
+    printFileSize(fullPath.c_str());
+    printFileContent(fullPath.c_str());
 }
 
 

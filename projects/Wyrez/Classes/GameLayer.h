@@ -66,9 +66,9 @@ private:
     virtual bool init();
     
     CCSprite* createCustomSprite(std::string name, ccColor3B color);
-    
     template<class T = CCMenuItemSprite>
     T* createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selector);
+    CCSprite* createCustomFrame(int xTilesWide, int yTilesHigh, CCPoint centerPos);
     
     void loadMenuPrimary_displayMode();
     void loadMenuPrimary_buildMode();

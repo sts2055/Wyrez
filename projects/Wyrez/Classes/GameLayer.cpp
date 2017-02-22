@@ -234,6 +234,44 @@ T* GameHud::createMenuItemSpriteWithIcon(std::string icon, SEL_MenuHandler selec
     return pRet;
 }
 
+CCSprite* GameHud::createCustomFrame(int xTilesWide, int yTilesHigh, CCPoint centerPos)
+{
+    CCAssert(xTilesWide >= 5, "xTilesWide less than 5");
+    CCAssert(yTilesHigh >= 5, "yTilesHigh less than 5");
+    CCAssert(xTilesWide % 2 != 0, "xTilesWide must be uneven");
+    CCAssert(yTilesHigh % 2 != 0, "yTilesHigh must be uneven");
+    
+    CCSprite* pCenterPiece = this->createCustomSprite(std::string("button_assemble_body.png"), m_rWyrezMap.getSquareChargedColor());
+    pCenterPiece->setPosition(centerPos);
+    
+    for (int i = 0; i < xTilesWide; i++)
+    {
+        for (int n = 0; n < yTilesHigh; n++)
+        {
+            if (i == 0 && n == 0) { // bottom left
+                
+            }
+            else if (i == 0 && n == yTilesHigh) { // top left
+                
+            }
+            else if (i == xTilesWide && n == 0) { // bottom right
+                
+            }
+            else if (i == xTilesWide && n == yTilesHigh) { // top right
+                
+            }
+            else if (i == xTilesWide && n == yTilesHigh) { // center
+                // do nothing
+            }
+            else {
+                
+            }
+        }
+    }
+    
+    
+}
+
 void GameHud::loadMenuPrimary_displayMode()
 {
     if (m_pActive_menu_primary != nullptr){
